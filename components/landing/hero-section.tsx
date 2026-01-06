@@ -291,16 +291,16 @@ export function HeroSection() {
       </section>
 
       {/* Footer */}
-      <footer className="container mx-auto px-4 py-8 text-center text-gray-600">
-        <div className="flex items-center justify-center space-x-2 mb-4">
+      <footer className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-gray-600">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-4">
           <Sparkles className="h-6 w-6 text-purple-600" />
-          <span className="text-xl font-bold text-gray-900">BeautyExpress</span>
+          <span className="text-lg sm:text-xl font-bold text-gray-900">BeautyExpress</span>
         </div>
-        <p>
+        <p className="text-sm sm:text-base">
           &copy; 2025 BeautyExpress. All rights reserved. Crafted with ❤️ for
           beautiful nails.
         </p>
-        <p className="mt-2 text-sm">Santos*Kerosi</p>
+        <p className="mt-2 text-xs sm:text-sm">Santos*Kerosi</p>
       </footer>
     </div>
   );
