@@ -99,6 +99,29 @@ export function BookingForm({ onBookingComplete }: BookingFormProps) {
   const [selectedTime, setSelectedTime] = useState("");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
+  const [stylists, setStylists] = useState<Stylist[]>([]);
+  const [loadingStylists, setLoadingStylists] = useState(true);
+
+  useEffect(() => {
+    fetchStylists();
+  }, []);
+
+  const fetchStylists = async () => {
+    try {
+      setLoadingStylists(true);
+      const snapshot = await getDocs(collection(db, "stylists"));
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Stylist[];
+      setStylists(data);
+    } catch (error) {
+      console.error("Error fetching stylists:", error);
+      toast.error("Failed to load stylists");
+    } finally {
+      setLoadingStylists(false);
+    }
+  };
 
   const selectedServiceData = services.find((s) => s.id === selectedService);
   const selectedStylistData = stylists.find((s) => s.id === selectedStylist);
