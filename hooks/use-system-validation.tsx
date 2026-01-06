@@ -117,22 +117,26 @@ export function useSystemValidation() {
 
     console.log("🔄 Setting up real-time listeners...");
 
-    const today = new Date().toISOString().split("T")[0];
+    const getToday = () => new Date().toISOString().split("T")[0];
+    let currentDate = getToday();
 
-    // Real-time bookings listener
-    const bookingsQuery = query(
-      collection(db, "bookings"),
-      where("date", "==", today),
-    );
+    // Real-time bookings listener - listener for ALL bookings and filter client-side
+    const bookingsQuery = query(collection(db, "bookings"));
 
     const unsubscribeBookings = onSnapshot(bookingsQuery, (snapshot) => {
-      const bookings = snapshot.docs.map((doc) => ({
+      // Recalculate today's date in case we've crossed midnight
+      currentDate = getToday();
+
+      const allBookings = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
 
-      // Calculate revenue only from completed bookings
-      const completedBookings = bookings.filter(
+      // Filter bookings for today and completed status
+      const todaysBookings = allBookings.filter(
+        (booking: any) => booking.date === currentDate,
+      );
+      const completedBookings = todaysBookings.filter(
         (booking: any) => booking.status === "completed",
       );
       const revenue = completedBookings.reduce(
@@ -141,9 +145,13 @@ export function useSystemValidation() {
         0,
       );
 
+      console.log(
+        `📊 Real-time update: ${todaysBookings.length} bookings today, ${completedBookings.length} completed, Ksh${revenue} revenue`,
+      );
+
       setStats((prev) => ({
         ...prev,
-        todaysBookings: bookings.length,
+        todaysBookings: todaysBookings.length,
         revenueToday: revenue,
         lastUpdate: new Date(),
       }));

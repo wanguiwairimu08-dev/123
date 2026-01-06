@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
 import { BookingsManager } from "./bookings-manager";
 import { MessagingCenter } from "./messaging-center";
+import { StylistsManager } from "./stylists-manager";
 import {
   Calendar,
   MessageSquare,
@@ -128,9 +129,10 @@ export default function AdminDashboard() {
           onValueChange={setActiveTab}
           className="space-y-6"
         >
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="bookings">Bookings</TabsTrigger>
+            <TabsTrigger value="stylists">Stylists</TabsTrigger>
             <TabsTrigger value="messages">Messages</TabsTrigger>
             <TabsTrigger value="utilities">Utilities</TabsTrigger>
           </TabsList>
@@ -212,6 +214,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="bookings">
             <BookingsManager />
+          </TabsContent>
+
+          <TabsContent value="stylists">
+            <StylistsManager />
           </TabsContent>
 
           <TabsContent value="messages">

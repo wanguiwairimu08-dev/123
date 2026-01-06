@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -23,7 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CalendarIcon, Clock, Star, User } from "lucide-react";
 import { format } from "date-fns";
-import { addDoc, collection, Timestamp } from "firebase/firestore";
+import { addDoc, collection, Timestamp, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useClientAuth } from "@/hooks/use-client-auth";
 import { useNotifications } from "@/hooks/use-notifications";
@@ -31,93 +31,39 @@ import { toast } from "sonner";
 
 const services = [
   {
-    id: "Tips and gel",
-    name: "Tips and gel Manicure",
+    id: "Gel+artwork",
+    name: "Gel + Artwork",
     duration: 45,
     price: 500,
   },
   {
-    id: "Gel on natural nails",
-    name: "Classic manicure",
+    id: "Gel+artwork-classic",
+    name: "Gel + Artwork (Classic)",
     duration: 60,
     price: 300,
   },
   {
-    id: "Acrylics and nail-art",
-    name: "Acrylics-nail Art",
+    id: "Acrylics",
+    name: "Acrylics",
     duration: 90,
     price: 1500,
   },
-  { id: "Pedicure", name: "Pedicure", duration: 120, price: 800 },
-  { id: "Gum gel", name: "Gum gel", duration: 30, price: 500 },
+  { id: "Pedicure+gel", name: "Pedicure + Gel", duration: 120, price: 800 },
+  { id: "Gum-gel", name: "Gum Gel", duration: 30, price: 800 },
+  { id: "Gum-gel-extension", name: "Gum Gel Extension", duration: 45, price: 1000 },
+  { id: "Pedicure+tips", name: "Pedicure + Tips", duration: 90, price: 1000 },
+  { id: "Nail-builder", name: "Nail Builder", duration: 30, price: 500 },
+  { id: "Nail-removal", name: "Nail Removal", duration: 15, price: 100 },
 ];
 
-const stylists = [
-  {
-    id: "sarah",
-    name: "Stylist 1",
-    specialties: ["Nail Art", "Gel Manicure"],
-    rating: 4.9,
-    experience: "5+ years",
-    image: "/placeholder-user.jpg",
-  },
-  {
-    id: "emma",
-    name: "Stylist 2",
-    specialties: ["Pedicure", "Spa Treatments"],
-    rating: 4.8,
-    experience: "3+ years",
-    image: "/placeholder-user.jpg",
-  },
-  {
-    id: "lisa",
-    name: "Stylist 3",
-    specialties: ["Acrylic", "Full Set"],
-    rating: 4.9,
-    experience: "7+ years",
-    image: "/placeholder-user.jpg",
-  },
-  {
-    id: "maria",
-    name: "Stylist 4",
-    specialties: ["Gel Removal", "Nail Art"],
-    rating: 4.7,
-    experience: "4+ years",
-    image: "/placeholder-user.jpg",
-  },
-  {
-    id: "john",
-    name: "Stylist 5",
-    specialties: ["Manicure", "Pedicure"],
-    rating: 4.6,
-    experience: "2+ years",
-    image: "/placeholder-user.jpg",
-  },
-  {
-    id: "jane",
-    name: "Stylist 6",
-    specialties: ["Nail Art", "Spa Treatments"],
-    rating: 4.8,
-    experience: "6+ years",
-    image: "/placeholder-user.jpg",
-  },
-  {
-    id: "david",
-    name: "Stylist 7",
-    specialties: ["Acrylic", "Full Set"],
-    rating: 4.9,
-    experience: "8+ years",
-    image: "/placeholder-user.jpg",
-  },
-  {
-    id: "susan",
-    name: "Stylist 8",
-    specialties: ["Gel Manicure", "Pedicure"],
-    rating: 4.7,
-    experience: "3+ years",
-    image: "/placeholder-user.jpg",
-  },
-];
+interface Stylist {
+  id: string;
+  name: string;
+  specialties: string[];
+  rating: number;
+  experience: string;
+  phone?: string;
+}
 
 const timeSlots = [
   "9:00 AM",
@@ -147,19 +93,54 @@ interface BookingFormProps {
 export function BookingForm({ onBookingComplete }: BookingFormProps) {
   const { clientProfile } = useClientAuth();
   const { createNotification } = useNotifications(clientProfile?.uid);
-  const [selectedService, setSelectedService] = useState("");
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [selectedStylist, setSelectedStylist] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState("");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
+  const [stylists, setStylists] = useState<Stylist[]>([]);
+  const [loadingStylists, setLoadingStylists] = useState(true);
 
-  const selectedServiceData = services.find((s) => s.id === selectedService);
+  useEffect(() => {
+    fetchStylists();
+  }, []);
+
+  const fetchStylists = async () => {
+    try {
+      setLoadingStylists(true);
+      const snapshot = await getDocs(collection(db, "stylists"));
+      const data = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Stylist[];
+      setStylists(data);
+    } catch (error) {
+      console.error("Error fetching stylists:", error);
+      toast.error("Failed to load stylists");
+    } finally {
+      setLoadingStylists(false);
+    }
+  };
+
+  const selectedServicesData = services.filter((s) =>
+    selectedServices.includes(s.id),
+  );
   const selectedStylistData = stylists.find((s) => s.id === selectedStylist);
+  const totalPrice = selectedServicesData.reduce((sum, s) => sum + s.price, 0);
+  const totalDuration = selectedServicesData.reduce((sum, s) => sum + s.duration, 0);
+
+  const toggleService = (serviceId: string) => {
+    setSelectedServices((prev) =>
+      prev.includes(serviceId)
+        ? prev.filter((id) => id !== serviceId)
+        : [...prev, serviceId],
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!clientProfile || !selectedDate) return;
+    if (!clientProfile || !selectedDate || selectedServices.length === 0) return;
 
     setLoading(true);
 
@@ -169,27 +150,28 @@ export function BookingForm({ onBookingComplete }: BookingFormProps) {
         customerEmail: clientProfile.email,
         customerPhone: clientProfile.phone,
         customerId: clientProfile.uid,
-        service: selectedServiceData?.name,
-        serviceId: selectedService,
+        services: selectedServicesData.map((s) => s.name),
+        serviceIds: selectedServices,
         stylist: selectedStylistData?.name,
         stylistId: selectedStylist,
         date: format(selectedDate, "yyyy-MM-dd"),
         time: selectedTime,
         status: "pending",
         notes,
-        price: selectedServiceData?.price,
-        revenue: selectedServiceData?.price, // Add revenue field for admin tracking
-        duration: selectedServiceData?.duration,
+        price: totalPrice,
+        revenue: totalPrice, // Add revenue field for admin tracking
+        duration: totalDuration,
         createdAt: Timestamp.now(),
       };
 
       await addDoc(collection(db, "bookings"), bookingData);
 
       // Create notification for admin (using correct admin UID)
+      const serviceNames = selectedServicesData.map((s) => s.name).join(", ");
       await createNotification(
         "VJdxemjpYTfR3TAfAQDmZ9ucjxB2", // Admin UID from useAdminAuth
         "New Booking Request",
-        `${clientProfile.displayName} requested ${selectedServiceData?.name} with ${selectedStylistData?.name}`,
+        `${clientProfile.displayName} requested ${serviceNames} with ${selectedStylistData?.name}`,
         "booking",
         bookingData,
       );
@@ -198,7 +180,7 @@ export function BookingForm({ onBookingComplete }: BookingFormProps) {
       await createNotification(
         clientProfile.uid,
         "Booking Submitted",
-        `Your booking request for ${selectedServiceData?.name} has been submitted and is pending confirmation.`,
+        `Your booking request for ${serviceNames} has been submitted and is pending confirmation.`,
         "booking",
         bookingData,
       );
@@ -208,7 +190,7 @@ export function BookingForm({ onBookingComplete }: BookingFormProps) {
       );
 
       // Reset form
-      setSelectedService("");
+      setSelectedServices([]);
       setSelectedStylist("");
       setSelectedDate(undefined);
       setSelectedTime("");
@@ -235,88 +217,108 @@ export function BookingForm({ onBookingComplete }: BookingFormProps) {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Service Selection */}
           <div className="space-y-3">
-            <Label>Select Service</Label>
+            <Label>Select Services (You can choose multiple)</Label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {services.map((service) => (
                 <Card
                   key={service.id}
                   className={`cursor-pointer transition-all ${
-                    selectedService === service.id
+                    selectedServices.includes(service.id)
                       ? "ring-2 ring-purple-500 bg-purple-50"
                       : "hover:bg-gray-50"
                   }`}
-                  onClick={() => setSelectedService(service.id)}
+                  onClick={() => toggleService(service.id)}
                 >
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start">
-                      <div>
+                      <div className="flex-1">
                         <h3 className="font-medium">{service.name}</h3>
                         <p className="text-sm text-gray-500">
                           {service.duration} minutes
                         </p>
                       </div>
-                      <Badge variant="secondary">Ksh{service.price}</Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-
-          {/* Stylist Selection */}
-          <div className="space-y-3">
-            <Label>Choose Your Stylist</Label>
-            <div className="grid grid-cols-1 gap-3">
-              {stylists.map((stylist) => (
-                <Card
-                  key={stylist.id}
-                  className={`cursor-pointer transition-all ${
-                    selectedStylist === stylist.id
-                      ? "ring-2 ring-purple-500 bg-purple-50"
-                      : "hover:bg-gray-50"
-                  }`}
-                  onClick={() => setSelectedStylist(stylist.id)}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-center space-x-4">
-                      <Avatar className="h-12 w-12">
-                        <AvatarImage
-                          src={stylist.image || "/placeholder.svg"}
-                        />
-                        <AvatarFallback>
-                          <User className="h-6 w-6" />
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <h3 className="font-medium">{stylist.name}</h3>
-                        <p className="text-sm text-gray-500">
-                          {stylist.experience}
-                        </p>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <div className="flex items-center">
-                            <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                            <span className="text-sm ml-1">
-                              {stylist.rating}
-                            </span>
+                      <div className="flex flex-col items-end gap-2">
+                        <Badge variant="secondary">Ksh{service.price}</Badge>
+                        {selectedServices.includes(service.id) && (
+                          <div className="text-xs text-purple-600 font-semibold">
+                            ✓ Selected
                           </div>
-                          <div className="flex flex-wrap gap-1">
-                            {stylist.specialties.map((specialty) => (
-                              <Badge
-                                key={specialty}
-                                variant="outline"
-                                className="text-xs"
-                              >
-                                {specialty}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
+                        )}
                       </div>
                     </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
+            {selectedServices.length > 0 && (
+              <div className="text-sm text-gray-600 mt-2">
+                {selectedServices.length} service{selectedServices.length !== 1 ? "s" : ""} selected
+              </div>
+            )}
+          </div>
+
+          {/* Stylist Selection */}
+          <div className="space-y-3">
+            <Label>Choose Your Stylist</Label>
+            {loadingStylists ? (
+              <div className="text-center py-4 text-gray-500">
+                Loading stylists...
+              </div>
+            ) : stylists.length === 0 ? (
+              <div className="text-center py-4 text-gray-500">
+                <p>No stylists available at the moment.</p>
+                <p className="text-sm">Please check back later.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3">
+                {stylists.map((stylist) => (
+                  <Card
+                    key={stylist.id}
+                    className={`cursor-pointer transition-all ${
+                      selectedStylist === stylist.id
+                        ? "ring-2 ring-purple-500 bg-purple-50"
+                        : "hover:bg-gray-50"
+                    }`}
+                    onClick={() => setSelectedStylist(stylist.id)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-4">
+                        <Avatar className="h-12 w-12">
+                          <AvatarFallback>
+                            <User className="h-6 w-6" />
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <h3 className="font-medium">{stylist.name}</h3>
+                          <p className="text-sm text-gray-500">
+                            {stylist.experience}
+                          </p>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <div className="flex items-center">
+                              <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                              <span className="text-sm ml-1">
+                                {stylist.rating}
+                              </span>
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                              {stylist.specialties.map((specialty) => (
+                                <Badge
+                                  key={specialty}
+                                  variant="outline"
+                                  className="text-xs"
+                                >
+                                  {specialty}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Date Selection */}
@@ -377,33 +379,41 @@ export function BookingForm({ onBookingComplete }: BookingFormProps) {
           </div>
 
           {/* Booking Summary */}
-          {selectedServiceData &&
+          {selectedServices.length > 0 &&
             selectedStylistData &&
             selectedDate &&
             selectedTime && (
               <Card className="bg-purple-50 border-purple-200">
                 <CardContent className="p-4">
-                  <h3 className="font-medium mb-2">Booking Summary</h3>
-                  <div className="space-y-1 text-sm">
-                    <p>
-                      <strong>Service:</strong> {selectedServiceData.name}
-                    </p>
-                    <p>
-                      <strong>Stylist:</strong> {selectedStylistData.name}
-                    </p>
-                    <p>
-                      <strong>Date:</strong> {format(selectedDate, "PPP")}
-                    </p>
-                    <p>
-                      <strong>Time:</strong> {selectedTime}
-                    </p>
-                    <p>
-                      <strong>Duration:</strong> {selectedServiceData.duration}{" "}
-                      minutes
-                    </p>
-                    <p>
-                      <strong>Price:</strong> ${selectedServiceData.price}
-                    </p>
+                  <h3 className="font-medium mb-3">Booking Summary</h3>
+                  <div className="space-y-2 text-sm">
+                    <div>
+                      <p className="font-semibold mb-1">Services:</p>
+                      <div className="ml-2 space-y-1">
+                        {selectedServicesData.map((service) => (
+                          <p key={service.id} className="text-gray-700">
+                            • {service.name} ({service.duration} min) - Ksh{service.price}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="border-t border-purple-200 pt-2 mt-2">
+                      <p>
+                        <strong>Stylist:</strong> {selectedStylistData.name}
+                      </p>
+                      <p>
+                        <strong>Date:</strong> {format(selectedDate, "PPP")}
+                      </p>
+                      <p>
+                        <strong>Time:</strong> {selectedTime}
+                      </p>
+                      <p>
+                        <strong>Total Duration:</strong> {totalDuration} minutes
+                      </p>
+                      <p className="text-base font-bold text-purple-600 mt-2">
+                        <strong>Total Price:</strong> Ksh{totalPrice}
+                      </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -413,7 +423,7 @@ export function BookingForm({ onBookingComplete }: BookingFormProps) {
             type="submit"
             className="w-full"
             disabled={
-              !selectedService ||
+              selectedServices.length === 0 ||
               !selectedStylist ||
               !selectedDate ||
               !selectedTime ||
