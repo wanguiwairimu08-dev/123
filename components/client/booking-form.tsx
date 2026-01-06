@@ -235,57 +235,65 @@ export function BookingForm({ onBookingComplete }: BookingFormProps) {
           {/* Stylist Selection */}
           <div className="space-y-3">
             <Label>Choose Your Stylist</Label>
-            <div className="grid grid-cols-1 gap-3">
-              {stylists.map((stylist) => (
-                <Card
-                  key={stylist.id}
-                  className={`cursor-pointer transition-all ${
-                    selectedStylist === stylist.id
-                      ? "ring-2 ring-purple-500 bg-purple-50"
-                      : "hover:bg-gray-50"
-                  }`}
-                  onClick={() => setSelectedStylist(stylist.id)}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-center space-x-4">
-                      <Avatar className="h-12 w-12">
-                        <AvatarImage
-                          src={stylist.image || "/placeholder.svg"}
-                        />
-                        <AvatarFallback>
-                          <User className="h-6 w-6" />
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <h3 className="font-medium">{stylist.name}</h3>
-                        <p className="text-sm text-gray-500">
-                          {stylist.experience}
-                        </p>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <div className="flex items-center">
-                            <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                            <span className="text-sm ml-1">
-                              {stylist.rating}
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap gap-1">
-                            {stylist.specialties.map((specialty) => (
-                              <Badge
-                                key={specialty}
-                                variant="outline"
-                                className="text-xs"
-                              >
-                                {specialty}
-                              </Badge>
-                            ))}
+            {loadingStylists ? (
+              <div className="text-center py-4 text-gray-500">
+                Loading stylists...
+              </div>
+            ) : stylists.length === 0 ? (
+              <div className="text-center py-4 text-gray-500">
+                <p>No stylists available at the moment.</p>
+                <p className="text-sm">Please check back later.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3">
+                {stylists.map((stylist) => (
+                  <Card
+                    key={stylist.id}
+                    className={`cursor-pointer transition-all ${
+                      selectedStylist === stylist.id
+                        ? "ring-2 ring-purple-500 bg-purple-50"
+                        : "hover:bg-gray-50"
+                    }`}
+                    onClick={() => setSelectedStylist(stylist.id)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-4">
+                        <Avatar className="h-12 w-12">
+                          <AvatarFallback>
+                            <User className="h-6 w-6" />
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <h3 className="font-medium">{stylist.name}</h3>
+                          <p className="text-sm text-gray-500">
+                            {stylist.experience}
+                          </p>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <div className="flex items-center">
+                              <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                              <span className="text-sm ml-1">
+                                {stylist.rating}
+                              </span>
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                              {stylist.specialties.map((specialty) => (
+                                <Badge
+                                  key={specialty}
+                                  variant="outline"
+                                  className="text-xs"
+                                >
+                                  {specialty}
+                                </Badge>
+                              ))}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Date Selection */}
