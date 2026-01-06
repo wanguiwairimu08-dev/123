@@ -93,7 +93,7 @@ interface BookingFormProps {
 export function BookingForm({ onBookingComplete }: BookingFormProps) {
   const { clientProfile } = useClientAuth();
   const { createNotification } = useNotifications(clientProfile?.uid);
-  const [selectedService, setSelectedService] = useState("");
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [selectedStylist, setSelectedStylist] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState("");
