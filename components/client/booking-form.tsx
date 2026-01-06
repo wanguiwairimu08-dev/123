@@ -56,72 +56,14 @@ const services = [
   { id: "Nail-removal", name: "Nail Removal", duration: 15, price: 100 },
 ];
 
-const stylists = [
-  {
-    id: "sarah",
-    name: "Stylist 1",
-    specialties: ["Nail Art", "Gel Manicure"],
-    rating: 4.9,
-    experience: "5+ years",
-    image: "/placeholder-user.jpg",
-  },
-  {
-    id: "emma",
-    name: "Stylist 2",
-    specialties: ["Pedicure", "Spa Treatments"],
-    rating: 4.8,
-    experience: "3+ years",
-    image: "/placeholder-user.jpg",
-  },
-  {
-    id: "lisa",
-    name: "Stylist 3",
-    specialties: ["Acrylic", "Full Set"],
-    rating: 4.9,
-    experience: "7+ years",
-    image: "/placeholder-user.jpg",
-  },
-  {
-    id: "maria",
-    name: "Stylist 4",
-    specialties: ["Gel Removal", "Nail Art"],
-    rating: 4.7,
-    experience: "4+ years",
-    image: "/placeholder-user.jpg",
-  },
-  {
-    id: "john",
-    name: "Stylist 5",
-    specialties: ["Manicure", "Pedicure"],
-    rating: 4.6,
-    experience: "2+ years",
-    image: "/placeholder-user.jpg",
-  },
-  {
-    id: "jane",
-    name: "Stylist 6",
-    specialties: ["Nail Art", "Spa Treatments"],
-    rating: 4.8,
-    experience: "6+ years",
-    image: "/placeholder-user.jpg",
-  },
-  {
-    id: "david",
-    name: "Stylist 7",
-    specialties: ["Acrylic", "Full Set"],
-    rating: 4.9,
-    experience: "8+ years",
-    image: "/placeholder-user.jpg",
-  },
-  {
-    id: "susan",
-    name: "Stylist 8",
-    specialties: ["Gel Manicure", "Pedicure"],
-    rating: 4.7,
-    experience: "3+ years",
-    image: "/placeholder-user.jpg",
-  },
-];
+interface Stylist {
+  id: string;
+  name: string;
+  specialties: string[];
+  rating: number;
+  experience: string;
+  phone?: string;
+}
 
 const timeSlots = [
   "9:00 AM",
