@@ -13,6 +13,16 @@ export function useSampleData() {
 
     const initializeSampleData = async () => {
       try {
+        // Check if sample data initialization is disabled
+        const sampleDataDisabled = localStorage.getItem(
+          "sampleDataDisabled",
+        );
+
+        if (sampleDataDisabled) {
+          console.log("Sample data initialization is disabled");
+          return;
+        }
+
         // Add sample bookings for today
         const today = new Date().toISOString().split("T")[0];
 
