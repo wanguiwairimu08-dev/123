@@ -292,9 +292,9 @@ export function BookingsManager() {
                                   </p>
                                 </div>
                                 <div>
-                                  <Label>Service</Label>
+                                  <Label>Services</Label>
                                   <p className="font-medium">
-                                    {selectedBooking.service}
+                                    {selectedBooking.service || (selectedBooking.services && selectedBooking.services.length > 0 ? selectedBooking.services.join(", ") : "N/A")}
                                   </p>
                                 </div>
                                 <div>
