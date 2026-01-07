@@ -209,7 +209,9 @@ export function BookingsManager() {
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>{booking.service}</TableCell>
+                  <TableCell>
+                    {booking.service || (booking.services && booking.services.length > 0 ? booking.services.join(", ") : "N/A")}
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-2">
                       <Calendar className="h-4 w-4 text-gray-400" />
