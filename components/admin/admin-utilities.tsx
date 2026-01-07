@@ -13,9 +13,93 @@ import { Trash2, RefreshCw, Database, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { FunctionalityTest } from "@/components/test/functionality-test";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
+import { db } from "@/lib/firebase";
+
+const BOT_CLIENT_IDS = ["client1", "client2", "client3"];
 
 export function AdminUtilities() {
   const [loading, setLoading] = useState(false);
+
+  const deleteBotData = async () => {
+    setLoading(true);
+    try {
+      let deletedBookings = 0;
+      let deletedClients = 0;
+      let deletedConversations = 0;
+      let deletedMessages = 0;
+
+      // Delete all bookings from bot clients
+      for (const clientId of BOT_CLIENT_IDS) {
+        const bookingsQuery = query(
+          collection(db, "bookings"),
+          where("customerId", "==", clientId),
+        );
+        const bookingsSnapshot = await getDocs(bookingsQuery);
+        for (const doc1 of bookingsSnapshot.docs) {
+          await deleteDoc(doc1.ref);
+          deletedBookings++;
+        }
+
+        // Delete client profile
+        try {
+          await deleteDoc(doc(db, "clients", clientId));
+          deletedClients++;
+        } catch (e) {
+          console.log(`Client ${clientId} not found or already deleted`);
+        }
+      }
+
+      // Delete conversations for bot clients
+      const conversationsQuery = query(collection(db, "conversations"));
+      const conversationsSnapshot = await getDocs(conversationsQuery);
+      for (const convDoc of conversationsSnapshot.docs) {
+        const conv = convDoc.data();
+        if (BOT_CLIENT_IDS.includes(conv.customerId)) {
+          await deleteDoc(convDoc.ref);
+          deletedConversations++;
+        }
+      }
+
+      // Delete messages from bot clients
+      const messagesQuery = query(collection(db, "messages"));
+      const messagesSnapshot = await getDocs(messagesQuery);
+      for (const msgDoc of messagesSnapshot.docs) {
+        const msg = msgDoc.data();
+        if (BOT_CLIENT_IDS.includes(msg.senderId)) {
+          await deleteDoc(msgDoc.ref);
+          deletedMessages++;
+        }
+      }
+
+      // Clear the sample data flag
+      localStorage.removeItem("sampleDataInitialized");
+
+      toast.success(
+        `✅ Bot data removed:\n${deletedBookings} bookings\n${deletedClients} clients\n${deletedConversations} conversations\n${deletedMessages} messages`,
+        { duration: 5000 },
+      );
+
+      console.log("✅ Bot data cleaned up successfully");
+
+      // Refresh after a short delay to show updated metrics
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } catch (error) {
+      console.error("Error deleting bot data:", error);
+      toast.error("Failed to delete bot data. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const clearSampleData = () => {
     localStorage.removeItem("sampleDataInitialized");
