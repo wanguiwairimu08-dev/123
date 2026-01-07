@@ -118,111 +118,47 @@ export function useSystemValidation() {
     console.log("🔄 Setting up real-time listeners...");
 
     const getToday = () => new Date().toISOString().split("T")[0];
-    let currentDate = getToday();
-
-    // Function to calculate seconds until midnight for midnight reset
-    const getSecondsUntilMidnight = () => {
-      const now = new Date();
-      const tomorrow = new Date(now);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(0, 0, 0, 0);
-      return Math.max(0, Math.floor((tomorrow.getTime() - now.getTime()) / 1000));
-    };
-
-    // Setup midnight reset timer
-    let midnightTimer: NodeJS.Timeout;
-
-    const setupMidnightReset = () => {
-      const secondsUntilMidnight = getSecondsUntilMidnight();
-      console.log(`⏰ Daily revenue will reset at midnight in ${secondsUntilMidnight} seconds`);
-
-      midnightTimer = setTimeout(() => {
-        console.log("🌙 Midnight reached - resetting daily revenue tracker");
-        currentDate = getToday();
-
-        // Trigger a data refresh by manually recalculating stats
-        const bookingsQuery = query(collection(db, "bookings"));
-        getDocs(bookingsQuery).then((snapshot) => {
-          const allBookings = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-
-          const todaysBookings = allBookings.filter(
-            (booking: any) => booking.date === currentDate,
-          );
-          const completedBookings = todaysBookings.filter(
-            (booking: any) => booking.status === "completed",
-          );
-          const revenue = completedBookings.reduce(
-            (sum: number, booking: any) =>
-              sum + (booking.revenue || booking.price || 0),
-            0,
-          );
-
-          console.log(
-            `🔄 Post-midnight update: ${todaysBookings.length} bookings today, ${completedBookings.length} completed, Ksh${revenue} revenue`,
-          );
-
-          setStats((prev) => ({
-            ...prev,
-            todaysBookings: todaysBookings.length,
-            revenueToday: revenue,
-            lastUpdate: new Date(),
-          }));
-
-          // Reset the timer for the next midnight
-          setupMidnightReset();
-        });
-      }, secondsUntilMidnight * 1000);
-    };
-
-    setupMidnightReset();
 
     // Real-time bookings listener - listener for ALL bookings and filter client-side
     const bookingsQuery = query(collection(db, "bookings"));
 
-    const unsubscribeBookings = onSnapshot(bookingsQuery, (snapshot) => {
-      // Recalculate today's date in case we've crossed midnight
-      const newDate = getToday();
+    const unsubscribeBookings = onSnapshot(
+      bookingsQuery,
+      (snapshot) => {
+        const currentDate = getToday();
+        const allBookings = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
 
-      // If date changed (crossed midnight), reset the midnight timer
-      if (newDate !== currentDate) {
-        console.log("📅 Date changed - resetting midnight timer");
-        currentDate = newDate;
-        clearTimeout(midnightTimer);
-        setupMidnightReset();
-      }
+        // Filter bookings for today and completed status
+        const todaysBookings = allBookings.filter(
+          (booking: any) => booking.date === currentDate,
+        );
+        const completedBookings = todaysBookings.filter(
+          (booking: any) => booking.status === "completed",
+        );
+        const revenue = completedBookings.reduce(
+          (sum: number, booking: any) =>
+            sum + (booking.revenue || booking.price || 0),
+          0,
+        );
 
-      const allBookings = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+        console.log(
+          `📊 Real-time update: ${todaysBookings.length} bookings today, ${completedBookings.length} completed, Ksh${revenue} revenue`,
+        );
 
-      // Filter bookings for today and completed status
-      const todaysBookings = allBookings.filter(
-        (booking: any) => booking.date === currentDate,
-      );
-      const completedBookings = todaysBookings.filter(
-        (booking: any) => booking.status === "completed",
-      );
-      const revenue = completedBookings.reduce(
-        (sum: number, booking: any) =>
-          sum + (booking.revenue || booking.price || 0),
-        0,
-      );
-
-      console.log(
-        `📊 Real-time update: ${todaysBookings.length} bookings today, ${completedBookings.length} completed, Ksh${revenue} revenue`,
-      );
-
-      setStats((prev) => ({
-        ...prev,
-        todaysBookings: todaysBookings.length,
-        revenueToday: revenue,
-        lastUpdate: new Date(),
-      }));
-    });
+        setStats((prev) => ({
+          ...prev,
+          todaysBookings: todaysBookings.length,
+          revenueToday: revenue,
+          lastUpdate: new Date(),
+        }));
+      },
+      (error) => {
+        console.error("Bookings listener error:", error);
+      },
+    );
 
     // Real-time conversations listener
     const unsubscribeConversations = onSnapshot(
@@ -243,6 +179,9 @@ export function useSystemValidation() {
           lastUpdate: new Date(),
         }));
       },
+      (error) => {
+        console.error("Conversations listener error:", error);
+      },
     );
 
     // Real-time clients listener
@@ -255,10 +194,12 @@ export function useSystemValidation() {
           lastUpdate: new Date(),
         }));
       },
+      (error) => {
+        console.error("Clients listener error:", error);
+      },
     );
 
     return () => {
-      clearTimeout(midnightTimer);
       unsubscribeBookings();
       unsubscribeConversations();
       unsubscribeClients();
