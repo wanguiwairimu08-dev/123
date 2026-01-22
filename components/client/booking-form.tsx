@@ -152,6 +152,7 @@ export function BookingForm({ onBookingComplete }: BookingFormProps) {
         customerId: clientProfile.uid,
         services: selectedServicesData.map((s) => s.name),
         serviceIds: selectedServices,
+        service: selectedServicesData.map((s) => s.name).join(", "), // Display-friendly service list for admin
         stylist: selectedStylistData?.name,
         stylistId: selectedStylist,
         date: format(selectedDate, "yyyy-MM-dd"),

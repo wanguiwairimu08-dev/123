@@ -200,6 +200,11 @@ export function MessagingCenter() {
                       <p className="text-xs text-gray-400">
                         {conversation.lastMessageTime
                           ?.toDate()
+                          .toLocaleDateString(undefined, {
+                            month: "short",
+                            day: "numeric",
+                          })} {conversation.lastMessageTime
+                          ?.toDate()
                           .toLocaleTimeString()}
                       </p>
                     </div>
@@ -254,7 +259,10 @@ export function MessagingCenter() {
                               : "text-gray-500"
                           }`}
                         >
-                          {message.timestamp?.toDate().toLocaleTimeString()}
+                          {message.timestamp?.toDate().toLocaleDateString(undefined, {
+                            month: "short",
+                            day: "numeric",
+                          })} {message.timestamp?.toDate().toLocaleTimeString()}
                         </p>
                       </div>
                     </div>

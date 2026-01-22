@@ -61,7 +61,8 @@ interface Booking {
   customerName: string;
   customerEmail: string;
   customerPhone: string;
-  service: string;
+  service?: string;
+  services?: string[];
   stylist: string;
   date: string;
   time: string;
@@ -120,7 +121,8 @@ export function BookingsManager() {
           booking.customerEmail
             .toLowerCase()
             .includes(searchTerm.toLowerCase()) ||
-          booking.service.toLowerCase().includes(searchTerm.toLowerCase()),
+          (booking.service?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
+          (booking.services?.some((s) => s.toLowerCase().includes(searchTerm.toLowerCase())) || false),
       );
     }
 
@@ -208,7 +210,9 @@ export function BookingsManager() {
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>{booking.service}</TableCell>
+                  <TableCell>
+                    {booking.service || (booking.services && booking.services.length > 0 ? booking.services.join(", ") : "N/A")}
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-2">
                       <Calendar className="h-4 w-4 text-gray-400" />
@@ -288,9 +292,9 @@ export function BookingsManager() {
                                   </p>
                                 </div>
                                 <div>
-                                  <Label>Service</Label>
+                                  <Label>Services</Label>
                                   <p className="font-medium">
-                                    {selectedBooking.service}
+                                    {selectedBooking.service || (selectedBooking.services && selectedBooking.services.length > 0 ? selectedBooking.services.join(", ") : "N/A")}
                                   </p>
                                 </div>
                                 <div>
