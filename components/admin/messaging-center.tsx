@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Send, MessageSquare, User } from "lucide-react";
+import { Send, MessageSquare, User, Calendar, Clock } from "lucide-react";
 import {
   collection,
   query,
@@ -51,6 +51,23 @@ interface Conversation {
   unreadCount: number;
 }
 
+interface Booking {
+  id: string;
+  customerName: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  service?: string;
+  services?: string[];
+  stylist: string;
+  date: string;
+  time: string;
+  status: "pending" | "confirmed" | "completed" | "cancelled";
+  notes?: string;
+  createdAt: Timestamp;
+  type?: "admin" | "client";
+  amount?: number;
+}
+
 export function MessagingCenter() {
   const { user } = useAdminAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -59,6 +76,7 @@ export function MessagingCenter() {
   >(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
+  const [upcomingBooking, setUpcomingBooking] = useState<Booking | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -68,6 +86,7 @@ export function MessagingCenter() {
       orderBy("lastMessageTime", "desc"),
     );
 
+    let timeout: NodeJS.Timeout;
     const unsubscribe = onSnapshot(
       conversationsQuery,
       (snapshot) => {
@@ -76,9 +95,11 @@ export function MessagingCenter() {
           ...doc.data(),
         })) as Conversation[];
         setConversations(conversationsData);
+        clearTimeout(timeout);
       },
       (err) => {
         console.error("🔥 Firestore conversations listener:", err);
+        clearTimeout(timeout);
         if (err.code === "permission-denied") {
           toast.error(
             "Unable to load conversations – please update Firestore security rules.",
@@ -89,7 +110,16 @@ export function MessagingCenter() {
       },
     );
 
-    return unsubscribe;
+    // Set timeout in case listener never responds
+    timeout = setTimeout(() => {
+      console.warn("Conversations listener timeout - setting empty array");
+      setConversations([]);
+    }, 5000);
+
+    return () => {
+      unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   useEffect(() => {
@@ -101,13 +131,28 @@ export function MessagingCenter() {
         orderBy("timestamp", "asc"),
       );
 
-      const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
-        const messagesData = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as Message[];
-        setMessages(messagesData);
-      });
+      let timeout: NodeJS.Timeout;
+      const unsubscribe = onSnapshot(
+        messagesQuery,
+        (snapshot) => {
+          const messagesData = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          })) as Message[];
+          setMessages(messagesData);
+          clearTimeout(timeout);
+        },
+        (err) => {
+          console.error("Messages listener error:", err);
+          clearTimeout(timeout);
+        },
+      );
+
+      // Set timeout in case listener never responds
+      timeout = setTimeout(() => {
+        console.warn("Messages listener timeout - setting empty array");
+        setMessages([]);
+      }, 5000);
 
       // Reset unread count when selecting conversation
       const selectedConv = conversations.find(
@@ -119,7 +164,66 @@ export function MessagingCenter() {
         }).catch((err) => console.error("Error resetting unread count:", err));
       }
 
-      return unsubscribe;
+      return () => {
+        unsubscribe();
+        clearTimeout(timeout);
+      };
+    }
+  }, [selectedConversation, conversations]);
+
+  // Fetch upcoming booking for selected customer
+  useEffect(() => {
+    if (selectedConversation) {
+      const selectedConv = conversations.find(
+        (c) => c.id === selectedConversation,
+      );
+
+      if (selectedConv) {
+        const bookingsQuery = query(
+          collection(db, "bookings"),
+          where("customerEmail", "==", selectedConv.customerEmail),
+        );
+
+        let timeout: NodeJS.Timeout;
+        const unsubscribe = onSnapshot(
+          bookingsQuery,
+          (snapshot) => {
+            const bookingsData = snapshot.docs.map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            })) as Booking[];
+
+            // Show the latest booking (most recent by date, regardless of status)
+            if (bookingsData.length > 0) {
+              // Sort by date in descending order to get the most recent
+              const sortedByDate = bookingsData.sort((a, b) =>
+                new Date(b.date).getTime() - new Date(a.date).getTime()
+              );
+              setUpcomingBooking(sortedByDate[0]);
+            } else {
+              setUpcomingBooking(null);
+            }
+            clearTimeout(timeout);
+          },
+          (err) => {
+            console.error("Bookings listener error:", err);
+            clearTimeout(timeout);
+          },
+        );
+
+        // Set timeout in case listener never responds
+        timeout = setTimeout(() => {
+          console.warn("Bookings listener timeout - clearing booking");
+          setUpcomingBooking(null);
+        }, 5000);
+
+        return () => {
+          unsubscribe();
+          clearTimeout(timeout);
+        };
+      }
+    } else {
+      setUpcomingBooking(null);
     }
   }, [selectedConversation, conversations]);
 
@@ -232,6 +336,75 @@ export function MessagingCenter() {
                   ?.customerEmail
               : "Choose a customer to start messaging"}
           </CardDescription>
+
+          {/* Booking Panel */}
+          {upcomingBooking && (
+            <div className={`mt-4 p-4 border-2 rounded-lg shadow-md ${
+              upcomingBooking.type === "admin"
+                ? "bg-gradient-to-r from-orange-100 to-amber-100 border-orange-400"
+                : "bg-gradient-to-r from-purple-100 to-indigo-100 border-purple-400"
+            }`}>
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-3">
+                    <p className={`text-xs font-bold uppercase tracking-wide ${
+                      upcomingBooking.type === "admin" ? "text-orange-900" : "text-purple-900"
+                    }`}>
+                      📅 {upcomingBooking.type === "admin" ? "IN-SHOP BOOKING 🏪" : "LATEST BOOKING"}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <div className={`flex items-center space-x-2 text-sm font-semibold ${
+                      upcomingBooking.type === "admin" ? "text-orange-900" : "text-purple-900"
+                    }`}>
+                      <Calendar className={`h-5 w-5 ${
+                        upcomingBooking.type === "admin" ? "text-orange-600" : "text-purple-600"
+                      }`} />
+                      <span>{upcomingBooking.date}</span>
+                      <Clock className={`h-5 w-5 ml-2 ${
+                        upcomingBooking.type === "admin" ? "text-orange-600" : "text-purple-600"
+                      }`} />
+                      <span>{upcomingBooking.time}</span>
+                    </div>
+                    <div className={`text-sm bg-white/50 px-2 py-1 rounded ${
+                      upcomingBooking.type === "admin" ? "text-orange-900" : "text-purple-900"
+                    }`}>
+                      <span className="font-bold">Service:</span>{" "}
+                      {upcomingBooking.service ||
+                        (upcomingBooking.services &&
+                        upcomingBooking.services.length > 0
+                          ? upcomingBooking.services.join(", ")
+                          : "N/A")}
+                    </div>
+                    <div className={`text-sm bg-white/50 px-2 py-1 rounded ${
+                      upcomingBooking.type === "admin" ? "text-orange-900" : "text-purple-900"
+                    }`}>
+                      <span className="font-bold">Stylist:</span>{" "}
+                      {upcomingBooking.stylist}
+                    </div>
+                    {upcomingBooking.amount && (
+                      <div className={`text-sm bg-white/50 px-2 py-1 rounded font-bold ${
+                        upcomingBooking.type === "admin" ? "text-orange-900" : "text-purple-900"
+                      }`}>
+                        Amount: Ksh{upcomingBooking.amount}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <Badge
+                  className={`ml-3 font-bold text-sm px-3 py-1 ${
+                    upcomingBooking.status === "confirmed"
+                      ? "bg-green-500 text-white"
+                      : upcomingBooking.status === "pending"
+                        ? "bg-yellow-500 text-white"
+                        : "bg-gray-500 text-white"
+                  }`}
+                >
+                  {upcomingBooking.status.toUpperCase()}
+                </Badge>
+              </div>
+            </div>
+          )}
         </CardHeader>
         <CardContent className="flex flex-col h-[500px]">
           {selectedConversation ? (
