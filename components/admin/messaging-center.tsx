@@ -182,31 +182,49 @@ export function MessagingCenter() {
           where("customerEmail", "==", selectedConv.customerEmail),
         );
 
-        const unsubscribe = onSnapshot(bookingsQuery, (snapshot) => {
-          const bookingsData = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          })) as Booking[];
+        let timeout: NodeJS.Timeout;
+        const unsubscribe = onSnapshot(
+          bookingsQuery,
+          (snapshot) => {
+            const bookingsData = snapshot.docs.map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            })) as Booking[];
 
-          // Find the next upcoming booking
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
+            // Find the next upcoming booking
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
 
-          const upcomingBookings = bookingsData
-            .filter((booking) => {
-              const bookingDate = new Date(booking.date);
-              return bookingDate >= today && booking.status !== "cancelled";
-            })
-            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+            const upcomingBookings = bookingsData
+              .filter((booking) => {
+                const bookingDate = new Date(booking.date);
+                return bookingDate >= today && booking.status !== "cancelled";
+              })
+              .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-          if (upcomingBookings.length > 0) {
-            setUpcomingBooking(upcomingBookings[0]);
-          } else {
-            setUpcomingBooking(null);
-          }
-        });
+            if (upcomingBookings.length > 0) {
+              setUpcomingBooking(upcomingBookings[0]);
+            } else {
+              setUpcomingBooking(null);
+            }
+            clearTimeout(timeout);
+          },
+          (err) => {
+            console.error("Bookings listener error:", err);
+            clearTimeout(timeout);
+          },
+        );
 
-        return unsubscribe;
+        // Set timeout in case listener never responds
+        timeout = setTimeout(() => {
+          console.warn("Bookings listener timeout - clearing booking");
+          setUpcomingBooking(null);
+        }, 5000);
+
+        return () => {
+          unsubscribe();
+          clearTimeout(timeout);
+        };
       }
     } else {
       setUpcomingBooking(null);
