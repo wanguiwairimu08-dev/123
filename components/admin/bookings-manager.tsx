@@ -405,6 +405,11 @@ export function BookingsManager() {
                   </TableCell>
                   <TableCell>{booking.stylist}</TableCell>
                   <TableCell>
+                    <Badge className={getBookingTypeColor(booking.type)}>
+                      {booking.type === "admin" ? "🏪 In-Shop" : booking.type === "client" ? "💻 Online" : "Standard"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
                     <Badge className={getStatusColor(booking.status)}>
                       {booking.status}
                     </Badge>
