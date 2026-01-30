@@ -1,12 +1,5 @@
 "use client";
 
-import { useAdminAuth } from "@/hooks/use-admin-auth";
-import AdminLoginForm from "@/components/auth/admin-login-form";
-import AdminDashboard from "@/components/admin/admin-dashboard";
-import { Loader2, Crown } from "lucide-react";
-
-"use client";
-
 import { useState, useEffect } from "react";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
 import AdminLoginForm from "@/components/auth/admin-login-form";
