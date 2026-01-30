@@ -291,6 +291,50 @@ export function MessagingCenter() {
                   ?.customerEmail
               : "Choose a customer to start messaging"}
           </CardDescription>
+
+          {/* Booking Panel */}
+          {upcomingBooking && (
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <p className="text-xs font-semibold text-blue-900 mb-2">
+                    UPCOMING BOOKING
+                  </p>
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2 text-sm text-blue-800">
+                      <Calendar className="h-4 w-4" />
+                      <span className="font-medium">{upcomingBooking.date}</span>
+                      <Clock className="h-4 w-4" />
+                      <span className="font-medium">{upcomingBooking.time}</span>
+                    </div>
+                    <div className="text-sm text-blue-700">
+                      <span className="font-medium">Service:</span>{" "}
+                      {upcomingBooking.service ||
+                        (upcomingBooking.services &&
+                        upcomingBooking.services.length > 0
+                          ? upcomingBooking.services.join(", ")
+                          : "N/A")}
+                    </div>
+                    <div className="text-sm text-blue-700">
+                      <span className="font-medium">Stylist:</span>{" "}
+                      {upcomingBooking.stylist}
+                    </div>
+                  </div>
+                </div>
+                <Badge
+                  className={`ml-2 ${
+                    upcomingBooking.status === "confirmed"
+                      ? "bg-green-100 text-green-800"
+                      : upcomingBooking.status === "pending"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-gray-100 text-gray-800"
+                  }`}
+                >
+                  {upcomingBooking.status}
+                </Badge>
+              </div>
+            </div>
+          )}
         </CardHeader>
         <CardContent className="flex flex-col h-[500px]">
           {selectedConversation ? (
