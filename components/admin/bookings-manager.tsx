@@ -376,6 +376,7 @@ export function BookingsManager() {
                 <TableHead>Service</TableHead>
                 <TableHead>Date & Time</TableHead>
                 <TableHead>Stylist</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
