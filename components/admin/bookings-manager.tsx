@@ -169,6 +169,17 @@ export function BookingsManager() {
     }
   };
 
+  const getBookingTypeColor = (type?: string) => {
+    switch (type) {
+      case "admin":
+        return "bg-orange-100 text-orange-800"; // In-shop bookings
+      case "client":
+        return "bg-blue-100 text-blue-800"; // Online bookings
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
   const createAdminBooking = async (e: React.FormEvent) => {
     e.preventDefault();
 
