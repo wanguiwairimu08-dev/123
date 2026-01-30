@@ -191,19 +191,13 @@ export function MessagingCenter() {
               ...doc.data(),
             })) as Booking[];
 
-            // Find the next upcoming booking
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
-            const upcomingBookings = bookingsData
-              .filter((booking) => {
-                const bookingDate = new Date(booking.date);
-                return bookingDate >= today && booking.status !== "cancelled";
-              })
-              .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-            if (upcomingBookings.length > 0) {
-              setUpcomingBooking(upcomingBookings[0]);
+            // Show the latest booking (most recent by date, regardless of status)
+            if (bookingsData.length > 0) {
+              // Sort by date in descending order to get the most recent
+              const sortedByDate = bookingsData.sort((a, b) =>
+                new Date(b.date).getTime() - new Date(a.date).getTime()
+              );
+              setUpcomingBooking(sortedByDate[0]);
             } else {
               setUpcomingBooking(null);
             }
