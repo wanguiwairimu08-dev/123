@@ -219,26 +219,141 @@ export function BookingsManager() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <Input
-            placeholder="Search customers, services..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="sm:max-w-xs"
-          />
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="sm:max-w-xs">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Bookings</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="confirmed">Confirmed</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
-            </SelectContent>
-          </Select>
+        {/* Filters and Admin Booking Button */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-6 justify-between">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Input
+              placeholder="Search customers, services..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="sm:max-w-xs"
+            />
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="sm:max-w-xs">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Bookings</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="confirmed">Confirmed</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Dialog open={isAdminBookingDialogOpen} onOpenChange={setIsAdminBookingDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-green-600 hover:bg-green-700">
+                + Book In-Shop
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Book Customer In-Shop</DialogTitle>
+                <DialogDescription>
+                  Create a booking for a customer at the shop (no email required)
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={createAdminBooking} className="space-y-4">
+                <div>
+                  <Label htmlFor="customerName">Customer Name</Label>
+                  <Input
+                    id="customerName"
+                    placeholder="Enter customer name"
+                    value={adminBookingForm.customerName}
+                    onChange={(e) =>
+                      setAdminBookingForm({
+                        ...adminBookingForm,
+                        customerName: e.target.value,
+                      })
+                    }
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="service">Service</Label>
+                  <Input
+                    id="service"
+                    placeholder="e.g., Haircut, Manicure"
+                    value={adminBookingForm.service}
+                    onChange={(e) =>
+                      setAdminBookingForm({
+                        ...adminBookingForm,
+                        service: e.target.value,
+                      })
+                    }
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="stylist">Stylist</Label>
+                  <Input
+                    id="stylist"
+                    placeholder="Enter stylist name"
+                    value={adminBookingForm.stylist}
+                    onChange={(e) =>
+                      setAdminBookingForm({
+                        ...adminBookingForm,
+                        stylist: e.target.value,
+                      })
+                    }
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="date">Date</Label>
+                    <Input
+                      id="date"
+                      type="date"
+                      value={adminBookingForm.date}
+                      onChange={(e) =>
+                        setAdminBookingForm({
+                          ...adminBookingForm,
+                          date: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="time">Time</Label>
+                    <Input
+                      id="time"
+                      type="time"
+                      value={adminBookingForm.time}
+                      onChange={(e) =>
+                        setAdminBookingForm({
+                          ...adminBookingForm,
+                          time: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="amount">Amount (Ksh)</Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    placeholder="e.g., 500"
+                    value={adminBookingForm.amount}
+                    onChange={(e) =>
+                      setAdminBookingForm({
+                        ...adminBookingForm,
+                        amount: e.target.value,
+                      })
+                    }
+                    required
+                  />
+                </div>
+                <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">
+                  Create Booking
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Bookings Table */}
