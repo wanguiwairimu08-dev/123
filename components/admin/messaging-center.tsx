@@ -84,6 +84,7 @@ export function MessagingCenter() {
       orderBy("lastMessageTime", "desc"),
     );
 
+    let timeout: NodeJS.Timeout;
     const unsubscribe = onSnapshot(
       conversationsQuery,
       (snapshot) => {
@@ -92,9 +93,11 @@ export function MessagingCenter() {
           ...doc.data(),
         })) as Conversation[];
         setConversations(conversationsData);
+        clearTimeout(timeout);
       },
       (err) => {
         console.error("🔥 Firestore conversations listener:", err);
+        clearTimeout(timeout);
         if (err.code === "permission-denied") {
           toast.error(
             "Unable to load conversations – please update Firestore security rules.",
@@ -105,7 +108,16 @@ export function MessagingCenter() {
       },
     );
 
-    return unsubscribe;
+    // Set timeout in case listener never responds
+    timeout = setTimeout(() => {
+      console.warn("Conversations listener timeout - setting empty array");
+      setConversations([]);
+    }, 5000);
+
+    return () => {
+      unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   useEffect(() => {
