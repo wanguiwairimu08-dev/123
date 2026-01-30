@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Send, MessageSquare, User } from "lucide-react";
+import { Send, MessageSquare, User, Calendar, Clock } from "lucide-react";
 import {
   collection,
   query,
