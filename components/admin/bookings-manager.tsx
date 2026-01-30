@@ -82,6 +82,17 @@ export function BookingsManager() {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
+  // Admin in-shop booking form state
+  const [isAdminBookingDialogOpen, setIsAdminBookingDialogOpen] = useState(false);
+  const [adminBookingForm, setAdminBookingForm] = useState({
+    customerName: "",
+    service: "",
+    stylist: "",
+    date: "",
+    time: "",
+    amount: "",
+  });
+
   useEffect(() => {
     const q = query(collection(db, "bookings"), orderBy("createdAt", "desc"));
     const unsubscribe = onSnapshot(
