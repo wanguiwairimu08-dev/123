@@ -54,8 +54,8 @@ interface Conversation {
 interface Booking {
   id: string;
   customerName: string;
-  customerEmail: string;
-  customerPhone: string;
+  customerEmail?: string;
+  customerPhone?: string;
   service?: string;
   services?: string[];
   stylist: string;
@@ -64,6 +64,8 @@ interface Booking {
   status: "pending" | "confirmed" | "completed" | "cancelled";
   notes?: string;
   createdAt: Timestamp;
+  type?: "admin" | "client";
+  amount?: number;
 }
 
 export function MessagingCenter() {
