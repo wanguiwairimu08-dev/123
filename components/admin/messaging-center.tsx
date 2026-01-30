@@ -354,13 +354,21 @@ export function MessagingCenter() {
                     </p>
                   </div>
                   <div className="space-y-2">
-                    <div className="flex items-center space-x-2 text-sm font-semibold text-purple-900">
-                      <Calendar className="h-5 w-5 text-purple-600" />
+                    <div className={`flex items-center space-x-2 text-sm font-semibold ${
+                      upcomingBooking.type === "admin" ? "text-orange-900" : "text-purple-900"
+                    }`}>
+                      <Calendar className={`h-5 w-5 ${
+                        upcomingBooking.type === "admin" ? "text-orange-600" : "text-purple-600"
+                      }`} />
                       <span>{upcomingBooking.date}</span>
-                      <Clock className="h-5 w-5 text-purple-600 ml-2" />
+                      <Clock className={`h-5 w-5 ml-2 ${
+                        upcomingBooking.type === "admin" ? "text-orange-600" : "text-purple-600"
+                      }`} />
                       <span>{upcomingBooking.time}</span>
                     </div>
-                    <div className="text-sm text-purple-900 bg-white/50 px-2 py-1 rounded">
+                    <div className={`text-sm bg-white/50 px-2 py-1 rounded ${
+                      upcomingBooking.type === "admin" ? "text-orange-900" : "text-purple-900"
+                    }`}>
                       <span className="font-bold">Service:</span>{" "}
                       {upcomingBooking.service ||
                         (upcomingBooking.services &&
@@ -368,10 +376,19 @@ export function MessagingCenter() {
                           ? upcomingBooking.services.join(", ")
                           : "N/A")}
                     </div>
-                    <div className="text-sm text-purple-900 bg-white/50 px-2 py-1 rounded">
+                    <div className={`text-sm bg-white/50 px-2 py-1 rounded ${
+                      upcomingBooking.type === "admin" ? "text-orange-900" : "text-purple-900"
+                    }`}>
                       <span className="font-bold">Stylist:</span>{" "}
                       {upcomingBooking.stylist}
                     </div>
+                    {upcomingBooking.amount && (
+                      <div className={`text-sm bg-white/50 px-2 py-1 rounded font-bold ${
+                        upcomingBooking.type === "admin" ? "text-orange-900" : "text-purple-900"
+                      }`}>
+                        Amount: Ksh{upcomingBooking.amount}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <Badge
