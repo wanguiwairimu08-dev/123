@@ -43,6 +43,7 @@ import {
   CheckCircle,
   XCircle,
   Edit,
+  Trash2,
 } from "lucide-react";
 import {
   collection,
@@ -51,6 +52,7 @@ import {
   onSnapshot,
   doc,
   updateDoc,
+  deleteDoc,
   type Timestamp,
   addDoc,
 } from "firebase/firestore";
@@ -88,9 +90,10 @@ export function BookingsManager() {
     customerName: "",
     service: "",
     stylist: "",
-    date: "",
-    time: "",
+    date: new Date().toISOString().split("T")[0],
+    time: "10:00",
     amount: "",
+    notes: "",
   });
 
   useEffect(() => {
@@ -151,6 +154,19 @@ export function BookingsManager() {
       await updateDoc(doc(db, "bookings", bookingId), { status });
     } catch (error) {
       console.error("Error updating booking status:", error);
+      toast.error("Failed to update status");
+    }
+  };
+
+  const deleteBooking = async (bookingId: string) => {
+    if (!window.confirm("Are you sure you want to delete this booking?")) return;
+
+    try {
+      await deleteDoc(doc(db, "bookings", bookingId));
+      toast.success("Booking deleted successfully");
+    } catch (error) {
+      console.error("Error deleting booking:", error);
+      toast.error("Failed to delete booking");
     }
   };
 
@@ -201,7 +217,7 @@ export function BookingsManager() {
         status: "confirmed", // In-shop bookings are confirmed immediately
         amount: parseFloat(adminBookingForm.amount),
         type: "admin", // Mark as admin/in-shop booking
-        notes: "In-shop booking",
+        notes: adminBookingForm.notes || "In-shop booking",
         createdAt: new Date(),
       });
 
@@ -210,9 +226,10 @@ export function BookingsManager() {
         customerName: "",
         service: "",
         stylist: "",
-        date: "",
-        time: "",
+        date: new Date().toISOString().split("T")[0],
+        time: "10:00",
         amount: "",
+        notes: "",
       });
       setIsAdminBookingDialogOpen(false);
     } catch (error) {
@@ -357,6 +374,20 @@ export function BookingsManager() {
                       })
                     }
                     required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="notes">Notes</Label>
+                  <Input
+                    id="notes"
+                    placeholder="Any specific requests or details"
+                    value={adminBookingForm.notes}
+                    onChange={(e) =>
+                      setAdminBookingForm({
+                        ...adminBookingForm,
+                        notes: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">
@@ -522,6 +553,14 @@ export function BookingsManager() {
                           )}
                         </DialogContent>
                       </Dialog>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => deleteBooking(booking.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
