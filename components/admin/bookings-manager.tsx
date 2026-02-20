@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -78,15 +78,33 @@ interface Booking {
 }
 
 export function BookingsManager() {
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [filteredBookings, setFilteredBookings] = useState<Booking[]>([]);
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [searchTerm, setSearchTerm] = useState("");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isMpesaDialogOpen, setIsMpesaDialogOpen] = useState(false);
   const [mpesaPhoneNumber, setMpesaPhoneNumber] = useState("");
   const [isProcessingMpesa, setIsProcessingMpesa] = useState(false);
+
+  // Memoized filtered bookings for better performance
+  const filteredBookings = useMemo(() => {
+    let filtered = bookings;
+
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((booking) => booking.status === statusFilter);
+    }
+
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (booking) =>
+          booking.customerName.toLowerCase().includes(search) ||
+          booking.customerEmail?.toLowerCase().includes(search) ||
+          (booking.service?.toLowerCase().includes(search) || false) ||
+          (booking.services?.some((s) => s.toLowerCase().includes(search)) || false),
+      );
+    }
+
+    return filtered;
+  }, [bookings, statusFilter, searchTerm]);
 
   // Admin in-shop booking form state
   const [isAdminBookingDialogOpen, setIsAdminBookingDialogOpen] = useState(false);
@@ -125,30 +143,6 @@ export function BookingsManager() {
 
     return unsubscribe;
   }, []);
-
-  useEffect(() => {
-    let filtered = bookings;
-
-    if (statusFilter !== "all") {
-      filtered = filtered.filter((booking) => booking.status === statusFilter);
-    }
-
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (booking) =>
-          booking.customerName
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          booking.customerEmail
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          (booking.service?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
-          (booking.services?.some((s) => s.toLowerCase().includes(searchTerm.toLowerCase())) || false),
-      );
-    }
-
-    setFilteredBookings(filtered);
-  }, [bookings, statusFilter, searchTerm]);
 
   const updateBookingStatus = async (
     bookingId: string,
@@ -521,128 +515,32 @@ export function BookingsManager() {
                           Complete
                         </Button>
                       )}
-                      <Dialog
-                        open={isEditDialogOpen}
-                        onOpenChange={setIsEditDialogOpen}
+
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedBooking(booking);
+                          setIsEditDialogOpen(true);
+                        }}
                       >
-                        <DialogTrigger asChild>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setSelectedBooking(booking)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Booking Details</DialogTitle>
-                            <DialogDescription>
-                              View and manage booking information
-                            </DialogDescription>
-                          </DialogHeader>
-                          {selectedBooking && (
-                            <div className="space-y-4">
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <Label>Customer Name</Label>
-                                  <p className="font-medium">
-                                    {selectedBooking.customerName}
-                                  </p>
-                                </div>
-                                <div>
-                                  <Label>Services</Label>
-                                  <p className="font-medium">
-                                    {selectedBooking.service || (selectedBooking.services && selectedBooking.services.length > 0 ? selectedBooking.services.join(", ") : "N/A")}
-                                  </p>
-                                </div>
-                                <div>
-                                  <Label>Date</Label>
-                                  <p className="font-medium">
-                                    {selectedBooking.date}
-                                  </p>
-                                </div>
-                                <div>
-                                  <Label>Time</Label>
-                                  <p className="font-medium">
-                                    {selectedBooking.time}
-                                  </p>
-                                </div>
-                              </div>
-                              <div>
-                                <Label>Contact Information</Label>
-                                <div className="space-y-1 mt-1">
-                                  <div className="flex items-center space-x-2">
-                                    <Mail className="h-4 w-4 text-gray-400" />
-                                    <span>{selectedBooking.customerEmail}</span>
-                                  </div>
-                                  <div className="flex items-center space-x-2">
-                                    <Phone className="h-4 w-4 text-gray-400" />
-                                    <span>{selectedBooking.customerPhone}</span>
-                                  </div>
-                                </div>
-                              </div>
-                              {selectedBooking.notes && (
-                                <div>
-                                  <Label>Notes</Label>
-                                  <p className="mt-1 text-sm text-gray-600">
-                                    {selectedBooking.notes}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </DialogContent>
-                      </Dialog>
-                      <Dialog
-                        open={isMpesaDialogOpen}
-                        onOpenChange={setIsMpesaDialogOpen}
+                        <Edit className="h-4 w-4" />
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="bg-green-50 text-green-600 hover:bg-green-100 border-green-200"
+                        onClick={() => {
+                          setSelectedBooking(booking);
+                          setMpesaPhoneNumber(booking.customerPhone || "0707444525");
+                          setIsMpesaDialogOpen(true);
+                        }}
                       >
-                        <DialogTrigger asChild>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="bg-green-50 text-green-600 hover:bg-green-100 border-green-200"
-                            onClick={() => {
-                              setSelectedBooking(booking);
-                              setMpesaPhoneNumber(booking.customerPhone || "0707444525");
-                            }}
-                          >
-                            <Smartphone className="h-4 w-4 mr-1" />
-                            M-Pesa
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Send M-Pesa STK Push</DialogTitle>
-                            <DialogDescription>
-                              This will send a payment prompt to the customer's phone
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="space-y-4 py-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="mpesa-phone">Customer Phone Number</Label>
-                              <Input
-                                id="mpesa-phone"
-                                placeholder="07xxxxxxxx"
-                                value={mpesaPhoneNumber}
-                                onChange={(e) => setMpesaPhoneNumber(e.target.value)}
-                              />
-                            </div>
-                            <div className="p-3 bg-gray-50 rounded-md border text-sm">
-                              <p><strong>Customer:</strong> {selectedBooking?.customerName}</p>
-                              <p><strong>Amount:</strong> Ksh {selectedBooking?.amount || (selectedBooking as any)?.price || 0}</p>
-                            </div>
-                            <Button
-                              className="w-full bg-green-600 hover:bg-green-700"
-                              onClick={handleMpesaPrompt}
-                              disabled={isProcessingMpesa}
-                            >
-                              {isProcessingMpesa ? "Sending Prompt..." : "Send Payment Prompt"}
-                            </Button>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
+                        <Smartphone className="h-4 w-4 mr-1" />
+                        M-Pesa
+                      </Button>
+
                       <Button
                         size="sm"
                         variant="outline"
@@ -658,6 +556,108 @@ export function BookingsManager() {
             </TableBody>
           </Table>
         </div>
+
+        {/* Global Dialogs moved outside the loop for performance */}
+        <Dialog
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Booking Details</DialogTitle>
+              <DialogDescription>
+                View and manage booking information
+              </DialogDescription>
+            </DialogHeader>
+            {selectedBooking && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Customer Name</Label>
+                    <p className="font-medium">
+                      {selectedBooking.customerName}
+                    </p>
+                  </div>
+                  <div>
+                    <Label>Services</Label>
+                    <p className="font-medium">
+                      {selectedBooking.service || (selectedBooking.services && selectedBooking.services.length > 0 ? selectedBooking.services.join(", ") : "N/A")}
+                    </p>
+                  </div>
+                  <div>
+                    <Label>Date</Label>
+                    <p className="font-medium">
+                      {selectedBooking.date}
+                    </p>
+                  </div>
+                  <div>
+                    <Label>Time</Label>
+                    <p className="font-medium">
+                      {selectedBooking.time}
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <Label>Contact Information</Label>
+                  <div className="space-y-1 mt-1">
+                    <div className="flex items-center space-x-2">
+                      <Mail className="h-4 w-4 text-gray-400" />
+                      <span>{selectedBooking.customerEmail}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Phone className="h-4 w-4 text-gray-400" />
+                      <span>{selectedBooking.customerPhone}</span>
+                    </div>
+                  </div>
+                </div>
+                {selectedBooking.notes && (
+                  <div>
+                    <Label>Notes</Label>
+                    <p className="mt-1 text-sm text-gray-600">
+                      {selectedBooking.notes}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
+          open={isMpesaDialogOpen}
+          onOpenChange={setIsMpesaDialogOpen}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Send M-Pesa STK Push</DialogTitle>
+              <DialogDescription>
+                This will send a payment prompt to the customer's phone
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="mpesa-phone">Customer Phone Number</Label>
+                <Input
+                  id="mpesa-phone"
+                  placeholder="07xxxxxxxx"
+                  value={mpesaPhoneNumber}
+                  onChange={(e) => setMpesaPhoneNumber(e.target.value)}
+                />
+              </div>
+              <div className="p-3 bg-gray-50 rounded-md border text-sm">
+                <p><strong>Customer:</strong> {selectedBooking?.customerName}</p>
+                <p><strong>Amount:</strong> Ksh {selectedBooking?.amount || (selectedBooking as any)?.price || 0}</p>
+              </div>
+              <Button
+                className="w-full bg-green-600 hover:bg-green-700"
+                onClick={handleMpesaPrompt}
+                disabled={isProcessingMpesa}
+              >
+                {isProcessingMpesa ? "Sending Prompt..." : "Send Payment Prompt"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );
