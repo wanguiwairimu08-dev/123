@@ -45,6 +45,7 @@ import {
   Edit,
   Trash2,
   Smartphone,
+  Banknote,
 } from "lucide-react";
 import {
   collection,
@@ -74,7 +75,11 @@ interface Booking {
   notes?: string;
   createdAt: Timestamp;
   type?: "admin" | "client"; // admin = in-shop, client = online
-  amount?: number; // for admin in-shop bookings
+  paymentMethod?: "cash" | "mpesa";
+  mpesaPhone?: string;
+  price?: number;
+  revenue?: number;
+  duration?: number;
 }
 
 export function BookingsManager() {
@@ -446,6 +451,7 @@ export function BookingsManager() {
                 <TableHead>Date & Time</TableHead>
                 <TableHead>Stylist</TableHead>
                 <TableHead>Type</TableHead>
+                <TableHead>Payment</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -477,6 +483,16 @@ export function BookingsManager() {
                     <Badge className={getBookingTypeColor(booking.type)}>
                       {booking.type === "admin" ? "🏪 In-Shop" : booking.type === "client" ? "💻 Online" : "Standard"}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {booking.paymentMethod ? (
+                      <Badge variant="outline" className={booking.paymentMethod === "mpesa" ? "text-green-600 border-green-200" : "text-blue-600 border-blue-200"}>
+                        {booking.paymentMethod === "mpesa" ? <Smartphone className="h-3 w-3 mr-1" /> : <Banknote className="h-3 w-3 mr-1" />}
+                        {booking.paymentMethod === "mpesa" ? "M-Pesa" : "Cash"}
+                      </Badge>
+                    ) : (
+                      <span className="text-gray-400 text-xs">N/A</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Badge className={getStatusColor(booking.status)}>

@@ -12,11 +12,22 @@ import { db } from "@/lib/firebase";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
 import { toast } from "sonner";
 
+interface StylistStat {
+  id: string;
+  name: string;
+  count: number;
+  revenue: number;
+}
+
 interface SystemStats {
   todaysBookings: number;
   pendingMessages: number;
   activeCustomers: number;
   revenueToday: number;
+  mpesaCount: number;
+  cashCount: number;
+  totalPayments: number;
+  stylistStats: StylistStat[];
   lastUpdate: Date;
 }
 
@@ -27,6 +38,10 @@ export function useSystemValidation() {
     pendingMessages: 0,
     activeCustomers: 0,
     revenueToday: 0,
+    mpesaCount: 0,
+    cashCount: 0,
+    totalPayments: 0,
+    stylistStats: [],
     lastUpdate: new Date(),
   });
   const [isValidated, setIsValidated] = useState(false);
@@ -51,7 +66,7 @@ export function useSystemValidation() {
           ...doc.data(),
         }));
 
-        // Calculate revenue only from completed bookings
+        // Calculate revenue and counts
         const completedBookings = bookings.filter(
           (booking: any) => booking.status === "completed",
         );
@@ -61,32 +76,35 @@ export function useSystemValidation() {
           0,
         );
 
-        console.log(
-          `📊 Revenue calculation: ${bookings.length} total bookings, ${completedBookings.length} completed, Ksh${revenue} revenue`,
-        );
+        const mpesaCount = allBookings.filter((b: any) => b.paymentMethod === "mpesa" && b.status === "completed").length;
+        const cashCount = allBookings.filter((b: any) => b.paymentMethod === "cash" && b.status === "completed").length;
+        const totalPayments = mpesaCount + cashCount;
 
-        // Test 2: Check conversations
-        const conversationsSnapshot = await getDocs(
-          collection(db, "conversations"),
-        );
-        const conversations = conversationsSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        const pendingMessages = conversations.reduce(
-          (sum: number, conv: any) => sum + (conv.unreadCount || 0),
-          0,
-        );
+        // Calculate stylist stats
+        const stylistsSnapshot = await getDocs(collection(db, "stylists"));
+        const stylists = stylistsSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
 
-        // Test 3: Check clients
-        const clientsSnapshot = await getDocs(collection(db, "clients"));
-        const activeCustomers = clientsSnapshot.docs.length;
+        const stylistStats = stylists.map(stylist => {
+          const stylistBookings = allBookings.filter((b: any) => b.stylistId === stylist.id && b.status === "completed");
+          const stylistRevenue = stylistBookings
+            .reduce((sum: number, b: any) => sum + (b.revenue || b.price || 0), 0);
+          return {
+            id: stylist.id,
+            name: stylist.name,
+            count: stylistBookings.length,
+            revenue: stylistRevenue
+          };
+        });
 
         const newStats = {
           todaysBookings: bookings.length,
           pendingMessages,
           activeCustomers,
           revenueToday: revenue,
+          mpesaCount,
+          cashCount,
+          totalPayments,
+          stylistStats,
           lastUpdate: new Date(),
         };
 
@@ -144,14 +162,32 @@ export function useSystemValidation() {
           0,
         );
 
-        console.log(
-          `📊 Real-time update: ${todaysBookings.length} bookings today, ${completedBookings.length} completed, Ksh${revenue} revenue`,
-        );
+        const mpesaCount = allBookings.filter((b: any) => b.paymentMethod === "mpesa" && b.status === "completed").length;
+        const cashCount = allBookings.filter((b: any) => b.paymentMethod === "cash" && b.status === "completed").length;
+        const totalPayments = mpesaCount + cashCount;
+
+        // Update stylist stats in real-time
+        const stylistMap = new Map();
+        allBookings.forEach((b: any) => {
+          if (!b.stylistId) return;
+          const current = stylistMap.get(b.stylistId) || { id: b.stylistId, name: b.stylist, count: 0, revenue: 0 };
+          if (b.status === "completed") {
+            current.count += 1;
+            current.revenue += (b.revenue || b.price || 0);
+          }
+          stylistMap.set(b.stylistId, current);
+        });
+
+        const stylistStats = Array.from(stylistMap.values());
 
         setStats((prev) => ({
           ...prev,
           todaysBookings: todaysBookings.length,
           revenueToday: revenue,
+          mpesaCount,
+          cashCount,
+          totalPayments,
+          stylistStats,
           lastUpdate: new Date(),
         }));
       },

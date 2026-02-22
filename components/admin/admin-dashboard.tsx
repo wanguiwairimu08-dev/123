@@ -22,6 +22,10 @@ import {
   TrendingUp,
   LogOut,
   Crown,
+  Smartphone,
+  Banknote,
+  PieChart,
+  Scissors,
 } from "lucide-react";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { useSampleData } from "@/hooks/use-sample-data";
@@ -83,6 +87,27 @@ export default function AdminDashboard() {
       value: stats.activeCustomers.toString(),
       icon: Users,
       color: "text-purple-600",
+      status: isValidated ? "✅" : "⏳",
+    },
+    {
+      title: "M-Pesa Payments",
+      value: stats.mpesaCount.toString(),
+      icon: Smartphone,
+      color: "text-green-500",
+      status: isValidated ? "✅" : "⏳",
+    },
+    {
+      title: "Cash Payments",
+      value: stats.cashCount.toString(),
+      icon: Banknote,
+      color: "text-blue-500",
+      status: isValidated ? "✅" : "⏳",
+    },
+    {
+      title: "Total Payments",
+      value: stats.totalPayments.toString(),
+      icon: PieChart,
+      color: "text-gray-600",
       status: isValidated ? "✅" : "⏳",
     },
     {
@@ -169,6 +194,33 @@ export default function AdminDashboard() {
                         )}
                       </div>
                       <stat.icon className={`h-8 w-8 ${stat.color}`} />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Stylist Stats Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {stats.stylistStats.map((stylist) => (
+                <Card key={stylist.id} className="border-purple-100">
+                  <CardHeader className="pb-2">
+                    <div className="flex justify-between items-center">
+                      <CardTitle className="text-sm font-semibold flex items-center">
+                        <Scissors className="h-4 w-4 mr-2 text-purple-500" />
+                        {stylist.name}
+                      </CardTitle>
+                      <Badge variant="secondary">{stylist.count} Bookings</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex justify-between items-end">
+                      <div>
+                        <p className="text-xs text-gray-500">Total Revenue</p>
+                        <p className="text-lg font-bold text-gray-900">
+                          Ksh{stylist.revenue.toLocaleString()}
+                        </p>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
