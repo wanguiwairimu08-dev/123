@@ -30,6 +30,7 @@ export async function initiateStkPush(phoneNumber: string, amount: number, accou
   const token = await getMpesaToken();
   const shortCode = process.env.MPESA_SHORTCODE || "174379";
   const passkey = process.env.MPESA_PASSKEY || "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919";
+  const receiverNumber = process.env.MPESA_RECEIVER_NUMBER || "0707444525";
   
   const timestamp = new Date().toISOString().replace(/[-:T]/g, "").split(".")[0];
   const password = Buffer.from(`${shortCode}${passkey}${timestamp}`).toString("base64");
@@ -53,7 +54,7 @@ export async function initiateStkPush(phoneNumber: string, amount: number, accou
     PhoneNumber: formattedPhone,
     CallBackURL: "https://mydomain.com/path", // This would be a real URL in production
     AccountReference: accountRef,
-    TransactionDesc: `Payment for ${accountRef}`,
+    TransactionDesc: `Payment for ${accountRef} to ${receiverNumber}`,
   };
 
   const response = await fetch(
