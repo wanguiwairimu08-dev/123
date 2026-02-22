@@ -55,22 +55,20 @@ export function useSystemValidation() {
 
         const today = new Date().toISOString().split("T")[0];
 
-        // Test 1: Check today's bookings
-        const bookingsQuery = query(
-          collection(db, "bookings"),
-          where("date", "==", today),
-        );
-        const bookingsSnapshot = await getDocs(bookingsQuery);
-        const bookings = bookingsSnapshot.docs.map((doc) => ({
+        // Test 1: Check bookings
+        const allBookingsSnapshot = await getDocs(collection(db, "bookings"));
+        const allBookings = allBookingsSnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
 
+        const todaysBookings = allBookings.filter((b: any) => b.date === today);
+
         // Calculate revenue and counts
-        const completedBookings = bookings.filter(
+        const completedTodaysBookings = todaysBookings.filter(
           (booking: any) => booking.status === "completed",
         );
-        const revenue = completedBookings.reduce(
+        const revenue = completedTodaysBookings.reduce(
           (sum: number, booking: any) =>
             sum + (booking.revenue || booking.price || 0),
           0,
@@ -97,7 +95,7 @@ export function useSystemValidation() {
         });
 
         const newStats = {
-          todaysBookings: bookings.length,
+          todaysBookings: todaysBookings.length,
           pendingMessages,
           activeCustomers,
           revenueToday: revenue,
