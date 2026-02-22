@@ -1,70 +1,93 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow admin user full access
+
+    // Function to check if the requesting user is the designated admin
     function isAdmin() {
-      return request.auth != null && request.auth.uid == "VJdxemjpYTfR3TAfAQDmZ9ucjxB2";
+      return request.auth != null &&
+             request.auth.uid == "VJdxemjpYTfR3TAfAQDmZ9ucjxB2";
     }
-    
-    // Allow authenticated users to access their own data
+
+    // Function to check if any user is authenticated
     function isAuthenticated() {
       return request.auth != null;
     }
-    
-    // Allow users to access their own documents
+
+    // Function to check if user owns the document
     function isOwner(userId) {
       return request.auth != null && request.auth.uid == userId;
     }
-    
-    // Clients collection - users can read/write their own profile, admin can read all
+
+    /* ─────────── Collections ─────────── */
+
+    // Rule for the 'clients' collection (client profiles)
+    // Admins can read/write all client profiles.
+    // Authenticated users can read/write their own profile.
     match /clients/{clientId} {
-      allow read, write: if isOwner(clientId) || isAdmin();
+      allow read, write: if isAdmin() || isOwner(clientId);
+      allow create: if isAuthenticated() && request.auth.uid == clientId;
     }
-    
-    // Bookings collection - users can read/write their own bookings, admin can read/write all
+
+    // Rule for the 'bookings' collection
+    // Admins can read/write all bookings.
+    // Authenticated users can create bookings and read their own bookings.
     match /bookings/{bookingId} {
       allow read, write: if isAdmin();
-      allow read: if isAuthenticated() && resource.data.customerId == request.auth.uid;
       allow create: if isAuthenticated();
-      // Prevent users from modifying their own bookings after creation (especially price/revenue)
-      allow update: if isAuthenticated() && resource.data.customerId == request.auth.uid &&
-        request.resource.data.customerId == resource.data.customerId &&
-        request.resource.data.price == resource.data.price &&
-        request.resource.data.revenue == resource.data.revenue &&
-        request.resource.data.services == resource.data.services &&
-        request.resource.data.serviceIds == resource.data.serviceIds &&
-        request.resource.data.stylist == resource.data.stylist &&
-        request.resource.data.stylistId == resource.data.stylistId &&
-        request.resource.data.date == resource.data.date &&
-        request.resource.data.time == resource.data.time;
+      allow read, update: if isAuthenticated() && 
+        (resource.data.customerId == request.auth.uid || 
+         resource.data.customerEmail == request.auth.token.email);
     }
-    
-    // Conversations collection - admin can read/write all, users can read/write their own
+
+    // Rule for the 'conversations' collection
+    // Admins can read/write all conversations.
+    // Authenticated users can read/write conversations they are part of.
+    // Conversation IDs follow pattern: "{clientId}_admin"
     match /conversations/{conversationId} {
       allow read, write: if isAdmin();
-      allow read, write: if isAuthenticated() && conversationId.matches('.*' + request.auth.uid + '.*');
+      allow create, read, update: if isAuthenticated() && 
+        conversationId.matches('.*' + request.auth.uid + '.*');
     }
-    
-    // Messages collection - admin can read/write all, users can read/write in their conversations
+
+    // Rule for the 'messages' collection
+    // Admins can read/write all messages.
+    // Authenticated users can create messages and read messages in their conversations.
     match /messages/{messageId} {
       allow read, write: if isAdmin();
-      allow read, write: if isAuthenticated() && (
+      allow create: if isAuthenticated() && 
+        request.resource.data.senderId == request.auth.uid;
+      allow read: if isAuthenticated() && (
         resource.data.senderId == request.auth.uid ||
         resource.data.conversationId.matches('.*' + request.auth.uid + '.*')
       );
-      allow create: if isAuthenticated();
     }
-    
-    // Notifications collection - users can read their own, admin can read/write all
+
+    // Rule for the 'notifications' collection
+    // Admins can read/write all notifications.
+    // Authenticated users can read their own notifications.
     match /notifications/{notificationId} {
+      allow read, write: if isAdmin();
       allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow write: if isAdmin();
       allow create: if isAuthenticated();
     }
-    
-    // Allow read access to public data
-    match /{document=**} {
-      allow read: if false; // Deny by default, specific rules above take precedence
+
+    // Rule for the 'stylists' collection
+    // Admins can read/write all stylists.
+    // Authenticated users can read stylists.
+    match /stylists/{stylistId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
     }
+
+    // Allow creating test documents for debugging
+    match /test/{testId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // Deny all other access by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
   }
 }

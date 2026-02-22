@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { MeteorCarousel } from "@/components/landing/meteor-carousel";
 import {
   Sparkles,
   Star,
@@ -136,8 +137,8 @@ export function HeroSection() {
       </header>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
-        <div className="text-center max-w-4xl mx-auto">
+      <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="text-center max-w-4xl mx-auto mb-10">
           <Badge className="mb-3 sm:mb-4 bg-purple-100 text-purple-800 hover:bg-purple-100 text-xs sm:text-sm">
             ✨ Premium Nail Spa Experience
           </Badge>
@@ -148,29 +149,9 @@ export function HeroSection() {
               Perfection
             </span>
           </h1>
-          <p className="text-base sm:text-lg md:text-xl text-gray-600 mb-6 sm:mb-8 max-w-2xl mx-auto px-2">
-            Experience luxury nail care with our expert stylists. From classic
-            manicures to intricate nail art, we create beautiful nails that
-            express your unique style.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-2">
-            <Link href="/auth/client/signup" className="w-full sm:w-auto">
-              <Button
-                size="lg"
-                className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-              >
-                <Calendar className="mr-2 h-4 sm:h-5 w-4 sm:w-5" />
-                Book Appointment
-              </Button>
-            </Link>
-            <Link href="/auth" className="w-full sm:w-auto">
-              <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                <Heart className="mr-2 h-4 sm:h-5 w-4 sm:w-5" />
-                View Services
-              </Button>
-            </Link>
-          </div>
         </div>
+
+        <MeteorCarousel />
       </section>
 
       {/* Services Section */}

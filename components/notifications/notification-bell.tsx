@@ -90,7 +90,9 @@ export function NotificationBell({ userId }: NotificationBellProps) {
                             </p>
                             <p className="text-sm text-gray-500 mt-1">{notification.message}</p>
                             <p className="text-xs text-gray-400 mt-1">
-                              {notification.createdAt?.toDate().toLocaleString()}
+                              {notification.createdAt?.toDate ?
+                                notification.createdAt.toDate().toLocaleString() :
+                                new Date(notification.createdAt?.seconds * 1000 || Date.now()).toLocaleString()}
                             </p>
                           </div>
                           {!notification.read && <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>}

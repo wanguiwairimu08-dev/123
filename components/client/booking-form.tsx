@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -21,7 +22,7 @@ import {
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { CalendarIcon, Clock, Star, User } from "lucide-react";
+import { CalendarIcon, Clock, Star, User, Smartphone, CreditCard } from "lucide-react";
 import { format } from "date-fns";
 import { addDoc, collection, Timestamp, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -98,9 +99,17 @@ export function BookingForm({ onBookingComplete }: BookingFormProps) {
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState("");
   const [notes, setNotes] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "mpesa">("cash");
+  const [mpesaPhone, setMpesaPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [stylists, setStylists] = useState<Stylist[]>([]);
   const [loadingStylists, setLoadingStylists] = useState(true);
+
+  useEffect(() => {
+    if (clientProfile?.phone && !mpesaPhone) {
+      setMpesaPhone(clientProfile.phone);
+    }
+  }, [clientProfile, mpesaPhone]);
 
   useEffect(() => {
     fetchStylists();
@@ -145,6 +154,28 @@ export function BookingForm({ onBookingComplete }: BookingFormProps) {
     setLoading(true);
 
     try {
+      if (paymentMethod === "mpesa") {
+        const stkResult = await fetch("/api/mpesa/stkpush", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            phoneNumber: mpesaPhone || clientProfile.phone,
+            amount: totalPrice,
+            accountRef: `BX_${clientProfile.displayName.slice(0, 10).replace(/[^a-zA-Z0-9]/g, "")}`,
+          }),
+        });
+        const stkData = await stkResult.json();
+
+        if (stkData.ResponseCode === "0") {
+          toast.success("M-Pesa STK Push sent! Please enter your PIN on your phone.");
+        } else {
+          console.error("M-Pesa STK Error:", stkData);
+          toast.error(`M-Pesa error: ${stkData.CustomerMessage || "Failed to initiate payment"}`);
+          setLoading(false);
+          return;
+        }
+      }
+
       const bookingData = {
         customerName: clientProfile.displayName,
         customerEmail: clientProfile.email,
@@ -158,6 +189,8 @@ export function BookingForm({ onBookingComplete }: BookingFormProps) {
         date: format(selectedDate, "yyyy-MM-dd"),
         time: selectedTime,
         status: "pending",
+        paymentMethod,
+        mpesaPhone: paymentMethod === "mpesa" ? mpesaPhone : null,
         notes,
         price: totalPrice,
         revenue: totalPrice, // Add revenue field for admin tracking
@@ -386,6 +419,55 @@ export function BookingForm({ onBookingComplete }: BookingFormProps) {
               placeholder="Any special requests or preferences..."
               rows={3}
             />
+          </div>
+
+          {/* Payment Method Selection */}
+          <div className="space-y-3 border-t pt-6">
+            <Label>Payment Method</Label>
+            <div className="grid grid-cols-2 gap-4">
+              <Button
+                type="button"
+                variant={paymentMethod === "cash" ? "default" : "outline"}
+                onClick={() => setPaymentMethod("cash")}
+                className="flex items-center justify-center space-x-2 h-20"
+              >
+                <div className="flex flex-col items-center">
+                  <CreditCard className="h-6 w-6 mb-1" />
+                  <span>Pay at Shop</span>
+                </div>
+              </Button>
+              <Button
+                type="button"
+                variant={paymentMethod === "mpesa" ? "default" : "outline"}
+                onClick={() => setPaymentMethod("mpesa")}
+                className={`flex items-center justify-center space-x-2 h-20 ${
+                  paymentMethod === "mpesa" ? "bg-green-600 hover:bg-green-700 text-white" : "border-green-600 text-green-600 hover:bg-green-50"
+                }`}
+              >
+                <div className="flex flex-col items-center">
+                  <Smartphone className="h-6 w-6 mb-1" />
+                  <span>M-Pesa</span>
+                </div>
+              </Button>
+            </div>
+
+            {paymentMethod === "mpesa" && (
+              <div className="mt-4 p-4 border border-green-200 rounded-lg bg-green-50 animate-in slide-in-from-top-2">
+                <Label htmlFor="mpesaPhone" className="text-green-800">Phone Number for STK Push</Label>
+                <div className="mt-2 flex space-x-2">
+                  <Input
+                    id="mpesaPhone"
+                    placeholder="e.g. 07xxxxxxxx"
+                    value={mpesaPhone}
+                    onChange={(e) => setMpesaPhone(e.target.value)}
+                    className="bg-white border-green-300 focus:ring-green-500"
+                  />
+                </div>
+                <p className="text-xs text-green-700 mt-2">
+                  You will receive an M-Pesa prompt on this phone to enter your PIN.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Booking Summary */}

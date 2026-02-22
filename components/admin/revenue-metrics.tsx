@@ -110,7 +110,7 @@ export function RevenueMetrics() {
           (booking) => booking.date === dateStr,
         );
         const revenue = dayBookings.reduce(
-          (sum, booking) => sum + (booking.revenue || booking.price || 0),
+          (sum, booking) => sum + (booking.amount || booking.revenue || booking.price || 0),
           0,
         );
         dailyData.push({
@@ -132,7 +132,7 @@ export function RevenueMetrics() {
           return bookingDate >= weekStart && bookingDate <= weekEnd;
         });
         const revenue = weekBookings.reduce(
-          (sum, booking) => sum + (booking.revenue || booking.price || 0),
+          (sum, booking) => sum + (booking.amount || booking.revenue || booking.price || 0),
           0,
         );
         weeklyData.push({
@@ -151,7 +151,7 @@ export function RevenueMetrics() {
       >();
       bookings.forEach((booking) => {
         const service = booking.service || "Unknown Service";
-        const revenue = booking.revenue || booking.price || 0;
+        const revenue = booking.amount || booking.revenue || booking.price || 0;
 
         if (!serviceMap.has(service)) {
           serviceMap.set(service, { revenue: 0, count: 0, prices: [] });
@@ -174,7 +174,7 @@ export function RevenueMetrics() {
 
       // Calculate total stats
       const totalRevenue = bookings.reduce(
-        (sum, booking) => sum + (booking.revenue || booking.price || 0),
+        (sum, booking) => sum + (booking.amount || booking.revenue || booking.price || 0),
         0,
       );
       const totalBookings = bookings.length;

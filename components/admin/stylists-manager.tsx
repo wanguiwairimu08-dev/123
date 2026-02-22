@@ -407,193 +407,22 @@ export function StylistsManager() {
                       <TableCell className="text-sm">{stylist.phone || "-"}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex gap-2 justify-end">
-                          <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-                            <DialogTrigger asChild>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => startEdit(stylist)}
-                              >
-                                <Edit2 className="h-4 w-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
-                              <DialogHeader>
-                                <DialogTitle>Edit Stylist</DialogTitle>
-                                <DialogDescription>
-                                  Update stylist information
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div className="space-y-4">
-                                <div>
-                                  <Label htmlFor="edit-name">Name</Label>
-                                  <Input
-                                    id="edit-name"
-                                    value={formData.name}
-                                    onChange={(e) =>
-                                      setFormData((prev) => ({
-                                        ...prev,
-                                        name: e.target.value,
-                                      }))
-                                    }
-                                    placeholder="Stylist name"
-                                  />
-                                </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => startEdit(stylist)}
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
 
-                                <div>
-                                  <Label htmlFor="edit-phone">Phone</Label>
-                                  <Input
-                                    id="edit-phone"
-                                    value={formData.phone}
-                                    onChange={(e) =>
-                                      setFormData((prev) => ({
-                                        ...prev,
-                                        phone: e.target.value,
-                                      }))
-                                    }
-                                    placeholder="Phone number"
-                                  />
-                                </div>
-
-                                <div>
-                                  <Label htmlFor="edit-experience">
-                                    Experience
-                                  </Label>
-                                  <Input
-                                    id="edit-experience"
-                                    value={formData.experience}
-                                    onChange={(e) =>
-                                      setFormData((prev) => ({
-                                        ...prev,
-                                        experience: e.target.value,
-                                      }))
-                                    }
-                                    placeholder="e.g., 5+ years"
-                                  />
-                                </div>
-
-                                <div>
-                                  <Label htmlFor="edit-rating">
-                                    Rating (1-5)
-                                  </Label>
-                                  <Input
-                                    id="edit-rating"
-                                    type="number"
-                                    min="1"
-                                    max="5"
-                                    step="0.1"
-                                    value={formData.rating}
-                                    onChange={(e) =>
-                                      setFormData((prev) => ({
-                                        ...prev,
-                                        rating: parseFloat(e.target.value),
-                                      }))
-                                    }
-                                  />
-                                </div>
-
-                                <div>
-                                  <Label htmlFor="edit-specialty">
-                                    Specialties
-                                  </Label>
-                                  <div className="flex gap-2 mb-2">
-                                    <Input
-                                      id="edit-specialty"
-                                      value={specialtyInput}
-                                      onChange={(e) =>
-                                        setSpecialtyInput(e.target.value)
-                                      }
-                                      onKeyPress={(e) => {
-                                        if (e.key === "Enter") {
-                                          e.preventDefault();
-                                          addSpecialty();
-                                        }
-                                      }}
-                                      placeholder="Add a specialty"
-                                    />
-                                    <Button
-                                      type="button"
-                                      onClick={addSpecialty}
-                                      variant="outline"
-                                    >
-                                      Add
-                                    </Button>
-                                  </div>
-                                  <div className="flex flex-wrap gap-2">
-                                    {formData.specialties.map(
-                                      (specialty, index) => (
-                                        <div
-                                          key={index}
-                                          className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
-                                        >
-                                          {specialty}
-                                          <button
-                                            onClick={() =>
-                                              removeSpecialty(index)
-                                            }
-                                            className="text-purple-600 hover:text-purple-900"
-                                          >
-                                            ×
-                                          </button>
-                                        </div>
-                                      )
-                                    )}
-                                  </div>
-                                </div>
-
-                                <div className="flex gap-3 mt-6">
-                                  <Button
-                                    onClick={handleEditStylist}
-                                    className="bg-purple-600 hover:bg-purple-700 flex-1"
-                                  >
-                                    Save Changes
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    onClick={() => {
-                                      setIsEditOpen(false);
-                                      setEditingId(null);
-                                    }}
-                                    className="flex-1"
-                                  >
-                                    Cancel
-                                  </Button>
-                                </div>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-
-                          <AlertDialog open={deleteId === stylist.id}>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setDeleteId(stylist.id)}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Stylist</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete{" "}
-                                  <strong>{stylist.name}</strong>? This action
-                                  cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <div className="flex gap-3 justify-end">
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() =>
-                                    handleDeleteStylist(stylist.id)
-                                  }
-                                  className="bg-red-600 hover:bg-red-700"
-                                >
-                                  Delete
-                                </AlertDialogAction>
-                              </div>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setDeleteId(stylist.id)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -604,6 +433,157 @@ export function StylistsManager() {
           )}
         </CardContent>
       </Card>
+
+      {/* Global Dialogs moved outside the loop for performance */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Stylist</DialogTitle>
+            <DialogDescription>Update stylist information</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-name">Name</Label>
+              <Input
+                id="edit-name"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    name: e.target.value,
+                  }))
+                }
+                placeholder="Stylist name"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-phone">Phone</Label>
+              <Input
+                id="edit-phone"
+                value={formData.phone}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, phone: e.target.value }))
+                }
+                placeholder="Phone number"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-experience">Experience</Label>
+              <Input
+                id="edit-experience"
+                value={formData.experience}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    experience: e.target.value,
+                  }))
+                }
+                placeholder="e.g., 5+ years"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-rating">Rating (1-5)</Label>
+              <Input
+                id="edit-rating"
+                type="number"
+                min="1"
+                max="5"
+                step="0.1"
+                value={formData.rating}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    rating: parseFloat(e.target.value),
+                  }))
+                }
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-specialty">Specialties</Label>
+              <div className="flex gap-2 mb-2">
+                <Input
+                  id="edit-specialty"
+                  value={specialtyInput}
+                  onChange={(e) => setSpecialtyInput(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addSpecialty();
+                    }
+                  }}
+                  placeholder="Add a specialty"
+                />
+                <Button type="button" onClick={addSpecialty} variant="outline">
+                  Add
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {formData.specialties.map((specialty, index) => (
+                  <div
+                    key={index}
+                    className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
+                  >
+                    {specialty}
+                    <button
+                      onClick={() => removeSpecialty(index)}
+                      className="text-purple-600 hover:text-purple-900"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <Button
+                onClick={handleEditStylist}
+                className="bg-purple-600 hover:bg-purple-700 flex-1"
+              >
+                Save Changes
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsEditOpen(false);
+                  setEditingId(null);
+                }}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog
+        open={!!deleteId}
+        onOpenChange={(open) => !open && setDeleteId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Stylist</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this stylist? This action cannot
+              be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex gap-3 justify-end">
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteId && handleDeleteStylist(deleteId)}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
