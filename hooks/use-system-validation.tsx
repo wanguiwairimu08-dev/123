@@ -94,6 +94,23 @@ export function useSystemValidation() {
           };
         });
 
+        // Test 2: Check conversations
+        const conversationsSnapshot = await getDocs(
+          collection(db, "conversations"),
+        );
+        const conversations = conversationsSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        const pendingMessages = conversations.reduce(
+          (sum: number, conv: any) => sum + (conv.unreadCount || 0),
+          0,
+        );
+
+        // Test 3: Check clients
+        const clientsSnapshot = await getDocs(collection(db, "clients"));
+        const activeCustomers = clientsSnapshot.docs.length;
+
         const newStats = {
           todaysBookings: todaysBookings.length,
           pendingMessages,
