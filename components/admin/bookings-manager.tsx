@@ -552,7 +552,7 @@ export function BookingsManager() {
                         className="bg-green-50 text-green-600 hover:bg-green-100 border-green-200"
                         onClick={() => {
                           setSelectedBooking(booking);
-                          setMpesaPhoneNumber(booking.customerPhone || "0707444525");
+                          setMpesaPhoneNumber(booking.customerPhone || "0117808581");
                           setIsMpesaDialogOpen(true);
                         }}
                       >
