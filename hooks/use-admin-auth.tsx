@@ -40,7 +40,6 @@ export function useAdminAuth() {
       (user) => {
         console.log("🔐 Auth state changed:", user?.email, user?.uid);
         console.log("🔍 Admin whitelist:", ADMIN_WHITELIST);
-        clearTimeout(timeout);
         setUser(user);
 
         if (
@@ -62,6 +61,7 @@ export function useAdminAuth() {
         }
 
         setLoading(false);
+        clearTimeout(timeout);
       },
       (error) => {
         console.error("Auth state change error:", error);

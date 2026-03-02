@@ -55,7 +55,7 @@ import {
   doc,
   updateDoc,
   deleteDoc,
-  type Timestamp,
+  Timestamp,
   addDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -261,7 +261,7 @@ export function BookingsManager() {
         amount: parseFloat(adminBookingForm.amount),
         type: "admin", // Mark as admin/in-shop booking
         notes: adminBookingForm.notes || "In-shop booking",
-        createdAt: new Date(),
+        createdAt: Timestamp.now(),
       });
 
       toast.success(`Booking created for ${adminBookingForm.customerName}`);

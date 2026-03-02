@@ -33,8 +33,15 @@ export function useNotifications(userId: string | undefined) {
           ...doc.data(),
         })) as Notification[]
 
+        const getMillis = (date: any) => {
+          if (!date) return 0;
+          if (typeof date.toMillis === "function") return date.toMillis();
+          if (date instanceof Date) return date.getTime();
+          return 0;
+        };
+
         // Order by createdAt DESC on the client side
-        notificationsData.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis())
+        notificationsData.sort((a, b) => getMillis(b.createdAt) - getMillis(a.createdAt))
 
         setNotifications(notificationsData)
         setUnreadCount(notificationsData.filter((n) => !n.read).length)

@@ -12,16 +12,25 @@ export default function HomePage() {
   const { isAdmin, loading: adminLoading } = useAdminAuth();
   const { clientProfile, loading: clientLoading } = useClientAuth();
   const [mounted, setMounted] = useState(false);
+  const [safetyTimeoutExceeded, setSafetyTimeoutExceeded] = useState(false);
 
   // Prevent hydration mismatch by only running client-side logic after mount
   useEffect(() => {
     setMounted(true);
+
+    // Safety timeout to prevent stuck loading screen
+    const timer = setTimeout(() => {
+      setSafetyTimeoutExceeded(true);
+      console.log("HomePage safety timeout reached - force clearing loading state");
+    }, 3000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
     if (!mounted) return;
 
-    if (!adminLoading && !clientLoading) {
+    if ((!adminLoading && !clientLoading) || safetyTimeoutExceeded) {
       if (isAdmin) {
         router.push("/admin");
       } else if (clientProfile) {
@@ -29,10 +38,10 @@ export default function HomePage() {
       }
       // If neither admin nor client, show the landing page (don't redirect)
     }
-  }, [isAdmin, clientProfile, adminLoading, clientLoading, router, mounted]);
+  }, [isAdmin, clientProfile, adminLoading, clientLoading, router, mounted, safetyTimeoutExceeded]);
 
   // Show loading state until mounted and auth is resolved
-  if (!mounted || adminLoading || clientLoading) {
+  if (!mounted || ((adminLoading || clientLoading) && !safetyTimeoutExceeded)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50">
         <div className="text-center">

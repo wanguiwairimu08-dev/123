@@ -55,14 +55,16 @@ export function useSystemValidation() {
 
         const today = new Date().toISOString().split("T")[0];
 
-        // Test 1: Check bookings
-        const allBookingsSnapshot = await getDocs(collection(db, "bookings"));
-        const allBookings = allBookingsSnapshot.docs.map((doc) => ({
+        // Test 1: Check bookings - Use a query for today's bookings
+        const todaysBookingsQuery = query(
+          collection(db, "bookings"),
+          where("date", "==", today)
+        );
+        const todaysBookingsSnapshot = await getDocs(todaysBookingsQuery);
+        const todaysBookings = todaysBookingsSnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
-
-        const todaysBookings = allBookings.filter((b: any) => b.date === today);
 
         // Calculate revenue and counts
         const completedTodaysBookings = todaysBookings.filter(
@@ -74,8 +76,17 @@ export function useSystemValidation() {
           0,
         );
 
-        const mpesaCount = allBookings.filter((b: any) => b.paymentMethod === "mpesa" && b.status === "completed").length;
-        const cashCount = allBookings.filter((b: any) => b.paymentMethod === "cash" && b.status === "completed").length;
+        // For mpesa/cash counts, we still need more bookings or we could query specifically
+        // Let's query only completed bookings for payment counts to be more efficient
+        const completedBookingsQuery = query(
+          collection(db, "bookings"),
+          where("status", "==", "completed")
+        );
+        const completedBookingsSnapshot = await getDocs(completedBookingsQuery);
+        const completedBookings = completedBookingsSnapshot.docs.map(doc => doc.data());
+
+        const mpesaCount = completedBookings.filter((b: any) => b.paymentMethod === "mpesa").length;
+        const cashCount = completedBookings.filter((b: any) => b.paymentMethod === "cash").length;
         const totalPayments = mpesaCount + cashCount;
 
         // Calculate stylist stats
@@ -83,7 +94,7 @@ export function useSystemValidation() {
         const stylists = stylistsSnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
 
         const stylistStats = stylists.map(stylist => {
-          const stylistBookings = allBookings.filter((b: any) => b.stylistId === stylist.id && b.status === "completed");
+          const stylistBookings = completedBookings.filter((b: any) => b.stylistId === stylist.id);
           const stylistRevenue = stylistBookings
             .reduce((sum: number, b: any) => sum + (b.revenue || b.price || 0), 0);
           return {
@@ -152,7 +163,16 @@ export function useSystemValidation() {
 
     const getToday = () => new Date().toISOString().split("T")[0];
 
-    // Real-time bookings listener - listener for ALL bookings and filter client-side
+    // Real-time bookings listener - listener for COMPLETED or TODAY's bookings
+    // To keep it simple but efficient, we'll listen to bookings from the last 7 days maybe?
+    // Or just listen to all and hope it's not too many, but the initial fetch was the slow part.
+    // Actually, onSnapshot is fine if the collection isn't huge. The problem was getDocs(collection(db, "bookings"))
+    // without any filters which fetches EVERYTHING every time the component mounts or isAdmin changes.
+
+    // Let's use a query that limits to recent bookings for the real-time listener if possible,
+    // but the dashboard might need all time stats.
+    // If they need all time stats, we should use a summary document or aggregated queries (Firestore count()).
+
     const bookingsQuery = query(collection(db, "bookings"));
 
     const unsubscribeBookings = onSnapshot(

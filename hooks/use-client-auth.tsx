@@ -9,7 +9,7 @@ import {
   signOut,
   updateProfile,
 } from "firebase/auth"
-import { doc, getDoc, setDoc } from "firebase/firestore"
+import { doc, getDoc, setDoc, Timestamp } from "firebase/firestore"
 import { auth, db } from "@/lib/firebase"
 
 interface ClientProfile {
@@ -17,7 +17,7 @@ interface ClientProfile {
   email: string
   displayName: string
   phone: string
-  createdAt: Date
+  createdAt: any
   isClient: boolean
 }
 
@@ -33,6 +33,14 @@ export function useClientAuth() {
 
   useEffect(() => {
     if (!mounted) return
+
+    // Set a timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      console.log("Client auth timeout reached - forcing loading to false")
+      setLoading(false)
+      setUser(null)
+      setClientProfile(null)
+    }, 3000)
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user)
@@ -56,9 +64,13 @@ export function useClientAuth() {
       }
 
       setLoading(false)
+      clearTimeout(timeout)
     })
 
-    return unsubscribe
+    return () => {
+      unsubscribe()
+      clearTimeout(timeout)
+    }
   }, [mounted])
 
   const registerClient = async (email: string, password: string, displayName: string, phone: string) => {
@@ -70,7 +82,7 @@ export function useClientAuth() {
       email,
       displayName,
       phone,
-      createdAt: new Date(),
+      createdAt: Timestamp.now(),
       isClient: true,
     }
 
