@@ -78,7 +78,7 @@ export function useSampleData() {
             email: "sarah@example.com",
             displayName: "Sarah Johnson",
             phone: "+1234567890",
-            createdAt: new Date(),
+            createdAt: Timestamp.now(),
             isClient: true,
           },
           {
@@ -86,7 +86,7 @@ export function useSampleData() {
             email: "maria@example.com",
             displayName: "Maria Garcia",
             phone: "+1234567891",
-            createdAt: new Date(),
+            createdAt: Timestamp.now(),
             isClient: true,
           },
           {
@@ -94,7 +94,7 @@ export function useSampleData() {
             email: "lisa@example.com",
             displayName: "Lisa Chen",
             phone: "+1234567892",
-            createdAt: new Date(),
+            createdAt: Timestamp.now(),
             isClient: true,
           },
         ];

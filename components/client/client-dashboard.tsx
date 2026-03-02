@@ -65,8 +65,15 @@ export default function ClientDashboard() {
           id: doc.id,
           ...doc.data(),
         })) as Booking[];
+        const getMillis = (date: any) => {
+          if (!date) return 0;
+          if (typeof date.toMillis === "function") return date.toMillis();
+          if (date instanceof Date) return date.getTime();
+          return 0;
+        };
+
         bookingsData.sort(
-          (a, b) => b.createdAt.toMillis() - a.createdAt.toMillis(),
+          (a, b) => getMillis(b.createdAt) - getMillis(a.createdAt),
         );
         setUserBookings(bookingsData);
         console.log(

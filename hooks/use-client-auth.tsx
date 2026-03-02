@@ -9,7 +9,7 @@ import {
   signOut,
   updateProfile,
 } from "firebase/auth"
-import { doc, getDoc, setDoc } from "firebase/firestore"
+import { doc, getDoc, setDoc, Timestamp } from "firebase/firestore"
 import { auth, db } from "@/lib/firebase"
 
 interface ClientProfile {
@@ -17,7 +17,7 @@ interface ClientProfile {
   email: string
   displayName: string
   phone: string
-  createdAt: Date
+  createdAt: any
   isClient: boolean
 }
 
@@ -70,7 +70,7 @@ export function useClientAuth() {
       email,
       displayName,
       phone,
-      createdAt: new Date(),
+      createdAt: Timestamp.now(),
       isClient: true,
     }
 
