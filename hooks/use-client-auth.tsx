@@ -34,6 +34,14 @@ export function useClientAuth() {
   useEffect(() => {
     if (!mounted) return
 
+    // Set a timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      console.log("Client auth timeout reached - forcing loading to false")
+      setLoading(false)
+      setUser(null)
+      setClientProfile(null)
+    }, 3000)
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user)
 
@@ -56,9 +64,13 @@ export function useClientAuth() {
       }
 
       setLoading(false)
+      clearTimeout(timeout)
     })
 
-    return unsubscribe
+    return () => {
+      unsubscribe()
+      clearTimeout(timeout)
+    }
   }, [mounted])
 
   const registerClient = async (email: string, password: string, displayName: string, phone: string) => {
